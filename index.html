@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SceneTracker — dftf.io</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:       #0c0c0e;
+      --surface:  #111113;
+      --surface2: #161618;
+      --surface3: #1c1c1f;
+      --border:   rgba(255,255,255,0.08);
+      --border2:  rgba(255,255,255,0.15);
+      --text:     #e8e6e0;
+      --text2:    #999;
+      --dim:      #555;
+      --accent:   #ffe066;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Geist', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      opacity: 0.025; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+    }
+
+    .page-wrap {
+      position: relative; z-index: 1;
+      max-width: 1600px; margin: 0 auto;
+      padding: 28px 24px 80px;
+    }
+
+    /* ── Back link ── */
+    .site-back {
+      display: inline-block;
+      font-size: 10px; letter-spacing: 0.4em;
+      color: rgba(255,224,102,0.35); text-transform: uppercase;
+      text-decoration: none; margin-bottom: 10px;
+      transition: color 0.2s;
+      font-family: 'Geist Mono', monospace;
+    }
+    .site-back:hover { color: var(--accent); }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; align-items: flex-end;
+      justify-content: space-between; gap: 16px;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .page-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; line-height: 1; margin-bottom: 4px;
+    }
+    .page-subtitle {
+      font-size: 10px; letter-spacing: 0.4em;
+      color: var(--dim); text-transform: uppercase;
+      font-family: 'Geist Mono', monospace;
+    }
+
+    .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border: 1px solid var(--border2); border-radius: 6px;
+      background: var(--surface); color: var(--text);
+      font-family: inherit; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.06em; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn:hover { background: var(--surface2); border-color: rgba(255,255,255,0.22); }
+    .btn-primary { background: var(--accent); color: #0c0c0e; border-color: var(--accent); font-weight: 600; }
+    .btn-primary:hover { background: #ffd700; border-color: #ffd700; }
+    .btn-ghost { background: transparent; border-color: transparent; color: var(--text2); }
+    .btn-ghost:hover { background: var(--surface2); border-color: var(--border); color: var(--text); }
+    .btn-danger { background: transparent; border-color: rgba(232,107,107,0.3); color: #e86b6b; }
+    .btn-danger:hover { background: rgba(232,107,107,0.1); border-color: #e86b6b; }
+    .btn-sm { padding: 6px 12px; font-size: 11px; }
+    .btn-icon { padding: 5px 7px; }
+
+    /* ── View toggle ── */
+    .view-toggle {
+      display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    }
+    .view-btn {
+      padding: 7px 13px; background: transparent; border: none;
+      color: var(--dim); font-family: inherit; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s;
+      text-transform: uppercase; display: flex; align-items: center; gap: 5px;
+    }
+    .view-btn:hover { color: var(--text); background: var(--surface2); }
+    .view-btn.active { background: var(--surface2); color: var(--text); }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;
+    }
+    .stat-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 10px; font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.04em; white-space: nowrap;
+    }
+    .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .stat-count { font-weight: 600; }
+    .stat-lbl { color: var(--text2); }
+
+    /* ── Status badge ── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 10px; font-family: 'Geist Mono', monospace;
+      font-weight: 500; letter-spacing: 0.04em; white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── AT-A-GLANCE VIEW ── */
+    .glance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .reel-col {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .reel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface2);
+    }
+    .reel-name {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--text); font-family: 'Geist Mono', monospace;
+    }
+    .reel-count { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; }
+    .reel-scenes { padding: 7px; display: flex; flex-direction: column; gap: 4px; min-height: 44px; }
+    .scene-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 10px; border-radius: 5px;
+      border: 1px solid var(--border); background: var(--bg);
+      cursor: pointer; transition: all 0.12s;
+    }
+    .scene-card:hover { border-color: var(--border2); background: var(--surface2); }
+    .scene-card-name {
+      font-size: 12px; font-weight: 500; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+    }
+    .reel-empty {
+      padding: 14px; text-align: center; font-size: 11px; color: var(--dim);
+      font-family: 'Geist Mono', monospace; letter-spacing: 0.06em;
+    }
+
+    /* ── Empty states ── */
+    .empty-state {
+      text-align: center; padding: 72px 24px;
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.25; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+    .empty-body { font-size: 12px; color: var(--dim); margin-bottom: 22px; }
+
+    /* ── LIST VIEW ── */
+    .list-table-wrap { overflow-x: auto; }
+    .list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .list-table th {
+      padding: 10px 14px; text-align: left;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--dim);
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+      font-family: 'Geist Mono', monospace; user-select: none; cursor: pointer;
+    }
+    .list-table th:last-child { cursor: default; }
+    .list-table th:hover:not(:last-child) { color: var(--text2); }
+    .list-table th.sorted { color: var(--accent); }
+    .sort-arrow { margin-left: 3px; opacity: 0.6; }
+    .list-table td {
+      padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle;
+    }
+    .list-table tr:hover td { background: var(--surface2); }
+    .list-table tr:last-child td { border-bottom: none; }
+    .scene-name-cell { font-weight: 500; }
+    .reel-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      background: var(--surface2); border: 1px solid var(--border);
+      font-size: 11px; font-family: 'Geist Mono', monospace; color: var(--text2);
+    }
+    .notes-cell {
+      max-width: 280px; font-size: 12px; color: var(--text2);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .no-data-row td {
+      text-align: center; padding: 52px 14px; color: var(--dim);
+      font-size: 12px; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em;
+    }
+
+    /* ── Modals ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(4px); z-index: 1000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
+      width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; position: relative;
+    }
+    .modal-wide { max-width: 520px; }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 13px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+    .modal-title { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+    .modal-close {
+      background: none; border: none; color: var(--dim); cursor: pointer;
+      font-size: 20px; line-height: 1; padding: 2px 4px; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 18px 20px; }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 13px 20px; border-top: 1px solid var(--border);
+      position: sticky; bottom: 0; background: var(--surface);
+    }
+
+    /* ── Form elements ── */
+    .form-group { margin-bottom: 15px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label {
+      display: block; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: 6px; font-family: 'Geist Mono', monospace;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 9px 12px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px;
+      transition: border-color 0.15s; outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--dim); }
+    .form-select {
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='7' viewBox='0 0 12 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    .form-select option { background: #1a1a1e; }
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Reels manager ── */
+    .reel-mgr-list { display: flex; flex-direction: column; gap: 6px; }
+    .reel-mgr-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; border-bottom: 1px solid var(--border);
+    }
+    .reel-mgr-item:last-child { border-bottom: none; }
+    .reel-drag-handle { color: var(--dim); cursor: grab; padding: 0 4px; font-size: 14px; user-select: none; }
+    .reel-mgr-input {
+      flex: 1; padding: 7px 10px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 5px;
+      color: var(--text); font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 500;
+      outline: none; transition: border-color 0.15s;
+    }
+    .reel-mgr-input:focus { border-color: var(--accent); }
+    .reel-mgr-input::placeholder { color: var(--dim); }
+    .reel-mgr-empty {
+      text-align: center; padding: 16px 0;
+      font-size: 12px; color: var(--dim);
+      font-family: 'Geist Mono', monospace; letter-spacing: 0.06em;
+    }
+    .reel-mgr-note {
+      font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.6;
+    }
+
+    /* Scrollbar */
+    .modal::-webkit-scrollbar { width: 4px; }
+    .modal::-webkit-scrollbar-track { background: transparent; }
+    .modal::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <a class="site-back" href="https://dftf.io">← dftf.io</a>
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Scene Tracker</div>
+        <div class="page-subtitle">VFX Scene Status</div>
+      </div>
+      <div class="header-actions">
+        <div class="view-toggle">
+          <button class="view-btn active" id="btn-glance" onclick="setView('glance')">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="14" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="14" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+            At a Glance
+          </button>
+          <button class="view-btn" id="btn-list" onclick="setView('list')">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            List
+          </button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openReelModal()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Manage Reels
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="openSceneModal()">+ Add Scene</button>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <!-- At-a-glance view -->
+    <div id="view-glance">
+      <div class="glance-grid" id="glance-grid"></div>
+    </div>
+
+    <!-- List view -->
+    <div id="view-list" style="display:none">
+      <div class="list-table-wrap">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th id="th-name" onclick="sortBy('name')">Scene <span class="sort-arrow" id="sa-name"></span></th>
+              <th id="th-reel" onclick="sortBy('reel')">Reel <span class="sort-arrow" id="sa-reel"></span></th>
+              <th id="th-status" onclick="sortBy('status')">Status <span class="sort-arrow" id="sa-status"></span></th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene Modal -->
+  <div class="modal-overlay hidden" id="scene-modal-overlay" onclick="handleOverlayClick(event,'scene-modal-overlay')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="scene-modal-title">Add Scene</div>
+        <button class="modal-close" onclick="closeSceneModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="scene-id">
+        <div class="form-group">
+          <label class="form-label">Scene Name</label>
+          <input type="text" class="form-input" id="scene-name" placeholder="e.g. 01_0010" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reel</label>
+          <select class="form-select" id="scene-reel"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="scene-status"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="scene-notes" placeholder="Any notes about this scene..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger btn-sm" id="scene-delete-btn" style="margin-right:auto;display:none" onclick="deleteScene()">Delete Scene</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeSceneModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveScene()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reel Manager Modal -->
+  <div class="modal-overlay hidden" id="reel-modal-overlay" onclick="handleOverlayClick(event,'reel-modal-overlay')">
+    <div class="modal modal-wide" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">Manage Reels</div>
+        <button class="modal-close" onclick="closeReelModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="reel-mgr-note">Reels define the columns in At-a-Glance view and the assignment options for each scene.</p>
+        <div class="reel-mgr-list" id="reel-mgr-list"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="addTempReel()">+ Add Reel</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeReelModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveReels()">Save Reels</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────────────────
+    // Constants
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const STORAGE_KEY = 'dftf_scene_tracker_v1';
+
+    const STATUSES = [
+      { key: 'complete',     label: 'Complete',           color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)'   },
+      { key: 'in-progress',  label: 'In Progress',        color: '#7eb0e8', bg: 'rgba(46,80,128,0.22)'   },
+      { key: 'todo',         label: 'To Do',              color: '#e8b84b', bg: 'rgba(122,90,26,0.22)'   },
+      { key: 'ready',        label: 'Ready to Edit',      color: '#4dc8c8', bg: 'rgba(26,92,92,0.22)'    },
+      { key: 'prepping',     label: 'Received/Prepping',  color: '#e89a4b', bg: 'rgba(107,61,26,0.22)'   },
+      { key: 'not-received', label: 'Not Received',       color: '#e86b6b', bg: 'rgba(107,26,26,0.22)'   },
+      { key: 'rescan',       label: 'Needs Rescan',       color: '#d4cc4b', bg: 'rgba(92,90,26,0.22)'    },
+      { key: 'partial',      label: 'Partial',            color: '#c97fd4', bg: 'rgba(107,46,114,0.22)'  },
+      { key: 'na',           label: 'N/A (AI)',           color: '#666',    bg: 'rgba(255,255,255,0.04)' },
+      { key: 'temp',         label: 'Temp',               color: '#555',    bg: 'rgba(255,255,255,0.02)' },
+    ];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // State
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let state = {
+      reels: ['R1', 'R2', 'R3', 'R4'],
+      scenes: [],
+      view: 'glance',
+      sort: { col: 'reel', dir: 1 },
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (Array.isArray(saved.reels))  state.reels  = saved.reels;
+        if (Array.isArray(saved.scenes)) state.scenes = saved.scenes;
+        if (saved.view)                  state.view   = saved.view;
+      } catch(e) {}
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          reels:  state.reels,
+          scenes: state.scenes,
+          view:   state.view,
+        }));
+      } catch(e) {}
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 7);
+    }
+
+    function statusFor(key) {
+      return STATUSES.find(s => s.key === key) || STATUSES[2]; // default: To Do
+    }
+
+    function badge(statusKey) {
+      const s = statusFor(statusKey);
+      return `<span class="badge" style="color:${s.color};background:${s.bg}">${s.label}</span>`;
+    }
+
+    function esc(str) {
+      return (str || '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    }
+
+    function handleOverlayClick(e, id) {
+      if (e.target === document.getElementById(id)) {
+        if (id === 'scene-modal-overlay') closeSceneModal();
+        if (id === 'reel-modal-overlay')  closeReelModal();
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Render
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function render() {
+      renderStats();
+      if (state.view === 'glance') renderGlance();
+      else renderList();
+    }
+
+    function renderStats() {
+      const counts = {};
+      STATUSES.forEach(s => counts[s.key] = 0);
+      state.scenes.forEach(sc => { if (counts[sc.status] !== undefined) counts[sc.status]++; });
+
+      const total = state.scenes.length;
+      let html = `<div class="stat-chip"><span class="stat-count">${total}</span><span class="stat-lbl">&nbsp;scenes</span></div>`;
+
+      STATUSES.forEach(s => {
+        if (counts[s.key] > 0) {
+          html += `<div class="stat-chip">
+            <span class="stat-dot" style="background:${s.color}"></span>
+            <span class="stat-count">${counts[s.key]}</span>
+            <span class="stat-lbl">&nbsp;${s.label}</span>
+          </div>`;
+        }
+      });
+
+      document.getElementById('stats-bar').innerHTML = html;
+    }
+
+    function renderGlance() {
+      const grid = document.getElementById('glance-grid');
+
+      if (state.reels.length === 0 && state.scenes.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🎬</div>
+          <div class="empty-title">Nothing here yet</div>
+          <div class="empty-body">Configure your reels, then start adding scenes</div>
+          <button class="btn btn-primary" onclick="openReelModal()">Configure Reels</button>
+        </div>`;
+        return;
+      }
+
+      let html = '';
+
+      // Reel columns
+      state.reels.forEach(reel => {
+        const scenes = state.scenes.filter(s => s.reel === reel);
+        html += `<div class="reel-col">
+          <div class="reel-header">
+            <span class="reel-name">${esc(reel)}</span>
+            <span class="reel-count">${scenes.length}</span>
+          </div>
+          <div class="reel-scenes">`;
+
+        if (scenes.length === 0) {
+          html += `<div class="reel-empty">—</div>`;
+        } else {
+          scenes.forEach(sc => {
+            html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
+              <span class="scene-card-name">${esc(sc.name)}</span>
+              ${badge(sc.status)}
+            </div>`;
+          });
+        }
+
+        html += `</div></div>`;
+      });
+
+      // Unassigned column (scenes whose reel no longer exists)
+      const unassigned = state.scenes.filter(s => !state.reels.includes(s.reel));
+      if (unassigned.length > 0) {
+        html += `<div class="reel-col" style="border-color:rgba(232,107,107,0.3)">
+          <div class="reel-header" style="border-bottom-color:rgba(232,107,107,0.25)">
+            <span class="reel-name" style="color:#e86b6b">Unassigned</span>
+            <span class="reel-count" style="color:#e86b6b">${unassigned.length}</span>
+          </div>
+          <div class="reel-scenes">`;
+        unassigned.forEach(sc => {
+          html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
+            <span class="scene-card-name">${esc(sc.name)}</span>
+            ${badge(sc.status)}
+          </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // If only reels exist but no scenes at all, show add-scene hint
+      if (state.scenes.length === 0) {
+        html += `<div style="grid-column:1/-1;text-align:center;padding:20px 0 8px">
+          <span style="font-size:12px;color:var(--dim);font-family:'Geist Mono',monospace;letter-spacing:0.06em">
+            Reels configured — click <strong style="color:var(--accent)">+ Add Scene</strong> to begin tracking
+          </span>
+        </div>`;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function renderList() {
+      const tbody = document.getElementById('list-body');
+
+      if (state.scenes.length === 0) {
+        tbody.innerHTML = `<tr class="no-data-row"><td colspan="5">No scenes yet — click + Add Scene to begin</td></tr>`;
+        renderSortHeaders();
+        return;
+      }
+
+      const sorted = [...state.scenes].sort((a, b) => {
+        const { col, dir } = state.sort;
+        if (col === 'reel') {
+          const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
+          const diff = ri(a.reel) - ri(b.reel);
+          if (diff !== 0) return diff * dir;
+          return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true });
+        }
+        if (col === 'status') {
+          const si = v => STATUSES.findIndex(s => s.key === v);
+          return (si(a.status) - si(b.status)) * dir;
+        }
+        return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }) * dir;
+      });
+
+      tbody.innerHTML = sorted.map(sc => `
+        <tr>
+          <td class="scene-name-cell">${esc(sc.name)}</td>
+          <td><span class="reel-tag">${esc(sc.reel || '—')}</span></td>
+          <td>${badge(sc.status)}</td>
+          <td class="notes-cell" title="${esc(sc.notes)}">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit scene">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      renderSortHeaders();
+    }
+
+    function renderSortHeaders() {
+      ['name','reel','status'].forEach(col => {
+        const th = document.getElementById('th-' + col);
+        const sa = document.getElementById('sa-' + col);
+        if (!th || !sa) return;
+        if (state.sort.col === col) {
+          th.classList.add('sorted');
+          sa.textContent = state.sort.dir === 1 ? '↑' : '↓';
+        } else {
+          th.classList.remove('sorted');
+          sa.textContent = '';
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // View / Sort
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function setView(v) {
+      state.view = v;
+      document.getElementById('view-glance').style.display = v === 'glance' ? '' : 'none';
+      document.getElementById('view-list').style.display   = v === 'list'   ? '' : 'none';
+      document.getElementById('btn-glance').classList.toggle('active', v === 'glance');
+      document.getElementById('btn-list').classList.toggle('active',   v === 'list');
+      saveState();
+      render();
+    }
+
+    function sortBy(col) {
+      if (state.sort.col === col) state.sort.dir = -state.sort.dir;
+      else state.sort = { col, dir: 1 };
+      renderList();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Scene modal
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function openSceneModal(id) {
+      const overlay  = document.getElementById('scene-modal-overlay');
+      const delBtn   = document.getElementById('scene-delete-btn');
+      const reelSel  = document.getElementById('scene-reel');
+      const statusSel = document.getElementById('scene-status');
+
+      // Build reel options
+      if (state.reels.length > 0) {
+        reelSel.innerHTML = state.reels.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+      } else {
+        reelSel.innerHTML = `<option value="">No reels configured</option>`;
+      }
+
+      // Build status options
+      statusSel.innerHTML = STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+
+      if (id) {
+        const sc = state.scenes.find(s => s.id === id);
+        if (!sc) return;
+        document.getElementById('scene-modal-title').textContent = 'Edit Scene';
+        document.getElementById('scene-id').value = sc.id;
+        document.getElementById('scene-name').value = sc.name;
+        reelSel.value = sc.reel;
+        statusSel.value = sc.status;
+        document.getElementById('scene-notes').value = sc.notes || '';
+        delBtn.style.display = '';
+      } else {
+        document.getElementById('scene-modal-title').textContent = 'Add Scene';
+        document.getElementById('scene-id').value = '';
+        document.getElementById('scene-name').value = '';
+        reelSel.value = state.reels[0] || '';
+        statusSel.value = 'todo';
+        document.getElementById('scene-notes').value = '';
+        delBtn.style.display = 'none';
+      }
+
+      overlay.classList.remove('hidden');
+      setTimeout(() => document.getElementById('scene-name').focus(), 50);
+    }
+
+    function closeSceneModal() {
+      document.getElementById('scene-modal-overlay').classList.add('hidden');
+    }
+
+    function saveScene() {
+      const name = document.getElementById('scene-name').value.trim();
+      if (!name) {
+        document.getElementById('scene-name').focus();
+        document.getElementById('scene-name').style.borderColor = '#e86b6b';
+        setTimeout(() => document.getElementById('scene-name').style.borderColor = '', 1200);
+        return;
+      }
+
+      const id   = document.getElementById('scene-id').value;
+      const data = {
+        name,
+        reel:   document.getElementById('scene-reel').value,
+        status: document.getElementById('scene-status').value,
+        notes:  document.getElementById('scene-notes').value.trim(),
+      };
+
+      if (id) {
+        const idx = state.scenes.findIndex(s => s.id === id);
+        if (idx >= 0) state.scenes[idx] = { ...state.scenes[idx], ...data };
+      } else {
+        state.scenes.push({ id: uid(), ...data });
+      }
+
+      saveState();
+      closeSceneModal();
+      render();
+    }
+
+    function deleteScene() {
+      const id = document.getElementById('scene-id').value;
+      if (!id) return;
+      if (!confirm('Delete this scene? This cannot be undone.')) return;
+      state.scenes = state.scenes.filter(s => s.id !== id);
+      saveState();
+      closeSceneModal();
+      render();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Reel manager modal
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let tempReels = [];
+
+    function openReelModal() {
+      tempReels = [...state.reels];
+      renderReelMgr();
+      document.getElementById('reel-modal-overlay').classList.remove('hidden');
+    }
+
+    function closeReelModal() {
+      document.getElementById('reel-modal-overlay').classList.add('hidden');
+    }
+
+    function renderReelMgr() {
+      const list = document.getElementById('reel-mgr-list');
+      if (tempReels.length === 0) {
+        list.innerHTML = `<div class="reel-mgr-empty">No reels — add one below</div>`;
+        return;
+      }
+      list.innerHTML = tempReels.map((r, i) => `
+        <div class="reel-mgr-item">
+          <span class="reel-drag-handle">⠿</span>
+          <input class="reel-mgr-input" value="${esc(r)}" data-idx="${i}" oninput="tempReels[${i}]=this.value" placeholder="Reel name">
+          <button class="btn btn-danger btn-icon btn-sm" onclick="removeTempReel(${i})" title="Remove">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function addTempReel() {
+      tempReels.push(`R${tempReels.length + 1}`);
+      renderReelMgr();
+      // Focus the new input
+      const inputs = document.querySelectorAll('.reel-mgr-input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function removeTempReel(i) {
+      const reelName  = tempReels[i];
+      const affected  = state.scenes.filter(s => s.reel === reelName).length;
+      if (affected > 0) {
+        if (!confirm(`"${reelName}" has ${affected} scene(s) assigned. Remove reel anyway? Those scenes will show as Unassigned.`)) return;
+      }
+      tempReels.splice(i, 1);
+      renderReelMgr();
+    }
+
+    function saveReels() {
+      // Read current input values (oninput keeps tempReels in sync but re-read to be safe)
+      const inputs = document.querySelectorAll('.reel-mgr-input');
+      tempReels = [...inputs].map(el => el.value.trim()).filter(Boolean);
+      state.reels = tempReels;
+      saveState();
+      closeReelModal();
+      render();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Keyboard
+    // ─────────────────────────────────────────────────────────────────────────
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeSceneModal();
+        closeReelModal();
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const sceneOverlay = document.getElementById('scene-modal-overlay');
+        if (!sceneOverlay.classList.contains('hidden') && document.activeElement?.tagName !== 'TEXTAREA') {
+          saveScene();
+        }
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Init
+    // ─────────────────────────────────────────────────────────────────────────
+
+    loadState();
+    setView(state.view || 'glance');
+  </script>
+</body>
+</html>
