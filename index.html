@@ -23,18 +23,13 @@
     }
 
     html, body {
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Geist', system-ui, sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
+      min-height: 100%; background: var(--bg); color: var(--text);
+      font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
 
     body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
+      content: ''; position: fixed; inset: 0; z-index: 0;
       opacity: 0.025; pointer-events: none;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: 256px 256px;
@@ -42,36 +37,30 @@
 
     .page-wrap {
       position: relative; z-index: 1;
-      max-width: 1600px; margin: 0 auto;
-      padding: 28px 24px 80px;
+      max-width: 1600px; margin: 0 auto; padding: 28px 24px 80px;
     }
 
-    /* ── Back link ── */
+    /* ── Back ── */
     .site-back {
-      display: inline-block;
-      font-size: 10px; letter-spacing: 0.4em;
+      display: inline-block; font-size: 10px; letter-spacing: 0.4em;
       color: rgba(255,224,102,0.35); text-transform: uppercase;
-      text-decoration: none; margin-bottom: 10px;
-      transition: color 0.2s;
+      text-decoration: none; margin-bottom: 10px; transition: color 0.2s;
       font-family: 'Geist Mono', monospace;
     }
     .site-back:hover { color: var(--accent); }
 
     /* ── Page header ── */
     .page-header {
-      display: flex; align-items: flex-end;
-      justify-content: space-between; gap: 16px;
-      margin-bottom: 20px; flex-wrap: wrap;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
     }
     .page-title {
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      font-weight: 700; letter-spacing: 0.18em;
-      text-transform: uppercase; line-height: 1; margin-bottom: 4px;
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase; line-height: 1; margin-bottom: 4px;
     }
     .page-subtitle {
-      font-size: 10px; letter-spacing: 0.4em;
-      color: var(--dim); text-transform: uppercase;
-      font-family: 'Geist Mono', monospace;
+      font-size: 10px; letter-spacing: 0.4em; color: var(--dim);
+      text-transform: uppercase; font-family: 'Geist Mono', monospace;
     }
 
     .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -79,12 +68,10 @@
     /* ── Buttons ── */
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 16px;
-      border: 1px solid var(--border2); border-radius: 6px;
+      padding: 8px 16px; border: 1px solid var(--border2); border-radius: 6px;
       background: var(--surface); color: var(--text);
       font-family: inherit; font-size: 12px; font-weight: 500;
-      letter-spacing: 0.06em; cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
+      letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
     .btn:hover { background: var(--surface2); border-color: rgba(255,255,255,0.22); }
     .btn-primary { background: var(--accent); color: #0c0c0e; border-color: var(--accent); font-weight: 600; }
@@ -97,46 +84,37 @@
     .btn-icon { padding: 5px 7px; }
 
     /* ── View toggle ── */
-    .view-toggle {
-      display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
-    }
+    .view-toggle { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
     .view-btn {
-      padding: 7px 13px; background: transparent; border: none;
-      color: var(--dim); font-family: inherit; font-size: 11px; font-weight: 500;
-      letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s;
-      text-transform: uppercase; display: flex; align-items: center; gap: 5px;
+      padding: 7px 13px; background: transparent; border: none; color: var(--dim);
+      font-family: inherit; font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+      cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+      display: flex; align-items: center; gap: 5px;
     }
     .view-btn:hover { color: var(--text); background: var(--surface2); }
     .view-btn.active { background: var(--surface2); color: var(--text); }
 
-    /* ── Stats bar ── */
-    .stats-bar {
-      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;
-    }
+    /* ── Stats ── */
+    .stats-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
     .stat-chip {
-      display: flex; align-items: center; gap: 5px;
-      padding: 4px 10px; border-radius: 20px;
-      border: 1px solid var(--border); background: var(--surface);
-      font-size: 10px; font-family: 'Geist Mono', monospace;
-      letter-spacing: 0.04em; white-space: nowrap;
+      display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+      font-size: 10px; font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; white-space: nowrap;
     }
     .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .stat-count { font-weight: 600; }
     .stat-lbl { color: var(--text2); }
 
-    /* ── Status badge ── */
+    /* ── Badge ── */
     .badge {
       display: inline-block; padding: 2px 8px; border-radius: 3px;
       font-size: 10px; font-family: 'Geist Mono', monospace;
-      font-weight: 500; letter-spacing: 0.04em; white-space: nowrap;
-      flex-shrink: 0;
+      font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0;
     }
 
-    /* ── AT-A-GLANCE VIEW ── */
+    /* ── AT-A-GLANCE ── */
     .glance-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 14px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px;
     }
     .reel-col {
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
@@ -146,8 +124,8 @@
       padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface2);
     }
     .reel-name {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--text); font-family: 'Geist Mono', monospace;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--text); font-family: 'Geist Mono', monospace;
     }
     .reel-count { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; }
     .reel-scenes { padding: 7px; display: flex; flex-direction: column; gap: 4px; min-height: 44px; }
@@ -163,14 +141,24 @@
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
     }
     .reel-empty {
-      padding: 14px; text-align: center; font-size: 11px; color: var(--dim);
+      padding: 12px; text-align: center; font-size: 11px; color: var(--dim);
       font-family: 'Geist Mono', monospace; letter-spacing: 0.06em;
     }
 
-    /* ── Empty states ── */
-    .empty-state {
-      text-align: center; padding: 72px 24px;
+    /* Quick-add row */
+    .reel-quick-add { padding: 6px 7px 7px; border-top: 1px solid var(--border); }
+    .reel-quick-input {
+      width: 100%; padding: 5px 9px;
+      background: transparent; border: 1px dashed rgba(255,255,255,0.1); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 11px; outline: none; transition: all 0.15s;
     }
+    .reel-quick-input::placeholder { color: var(--dim); font-style: italic; }
+    .reel-quick-input:focus {
+      background: var(--surface2); border-color: var(--accent); border-style: solid;
+    }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 72px 24px; }
     .empty-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.25; }
     .empty-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
     .empty-body { font-size: 12px; color: var(--dim); margin-bottom: 22px; }
@@ -179,9 +167,8 @@
     .list-table-wrap { overflow-x: auto; }
     .list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .list-table th {
-      padding: 10px 14px; text-align: left;
-      font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--dim);
+      padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
       border-bottom: 1px solid var(--border); white-space: nowrap;
       font-family: 'Geist Mono', monospace; user-select: none; cursor: pointer;
     }
@@ -189,9 +176,7 @@
     .list-table th:hover:not(:last-child) { color: var(--text2); }
     .list-table th.sorted { color: var(--accent); }
     .sort-arrow { margin-left: 3px; opacity: 0.6; }
-    .list-table td {
-      padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle;
-    }
+    .list-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .list-table tr:hover td { background: var(--surface2); }
     .list-table tr:last-child td { border-bottom: none; }
     .scene-name-cell { font-weight: 500; }
@@ -219,9 +204,9 @@
     .modal-overlay.hidden { display: none; }
     .modal {
       background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
-      width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; position: relative;
+      width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto;
     }
-    .modal-wide { max-width: 520px; }
+    .modal-wide { max-width: 540px; }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px 20px 13px; border-bottom: 1px solid var(--border);
@@ -235,18 +220,17 @@
     .modal-close:hover { color: var(--text); }
     .modal-body { padding: 18px 20px; }
     .modal-footer {
-      display: flex; justify-content: flex-end; gap: 8px;
-      padding: 13px 20px; border-top: 1px solid var(--border);
-      position: sticky; bottom: 0; background: var(--surface);
+      display: flex; justify-content: flex-end; gap: 8px; padding: 13px 20px;
+      border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--surface);
     }
 
     /* ── Form elements ── */
     .form-group { margin-bottom: 15px; }
     .form-group:last-child { margin-bottom: 0; }
     .form-label {
-      display: block; font-size: 10px; font-weight: 600;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--dim); margin-bottom: 6px; font-family: 'Geist Mono', monospace;
+      display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 6px;
+      font-family: 'Geist Mono', monospace;
     }
     .form-input, .form-select, .form-textarea {
       width: 100%; padding: 9px 12px;
@@ -255,7 +239,7 @@
       transition: border-color 0.15s; outline: none;
     }
     .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
-    .form-input::placeholder { color: var(--dim); }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--dim); }
     .form-select {
       cursor: pointer; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg width='12' height='7' viewBox='0 0 12 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -264,39 +248,112 @@
     .form-select option { background: #1a1a1e; }
     .form-textarea { resize: vertical; min-height: 80px; }
 
-    /* ── Reels manager ── */
+    /* ── Reel manager ── */
     .reel-mgr-list { display: flex; flex-direction: column; gap: 6px; }
     .reel-mgr-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px; padding: 6px 0;
+      border-bottom: 1px solid var(--border);
     }
     .reel-mgr-item:last-child { border-bottom: none; }
     .reel-drag-handle { color: var(--dim); cursor: grab; padding: 0 4px; font-size: 14px; user-select: none; }
     .reel-mgr-input {
-      flex: 1; padding: 7px 10px;
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 5px;
-      color: var(--text); font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 500;
-      outline: none; transition: border-color 0.15s;
+      flex: 1; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 5px; color: var(--text); font-family: 'Geist Mono', monospace;
+      font-size: 13px; font-weight: 500; outline: none; transition: border-color 0.15s;
     }
     .reel-mgr-input:focus { border-color: var(--accent); }
     .reel-mgr-input::placeholder { color: var(--dim); }
     .reel-mgr-empty {
-      text-align: center; padding: 16px 0;
-      font-size: 12px; color: var(--dim);
+      text-align: center; padding: 16px 0; font-size: 12px; color: var(--dim);
       font-family: 'Geist Mono', monospace; letter-spacing: 0.06em;
     }
-    .reel-mgr-note {
-      font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.6;
+
+    /* ── Import preview table ── */
+    .import-preview {
+      margin-top: 14px; max-height: 220px; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 6px;
+    }
+    .import-preview table { width: 100%; font-size: 11px; border-collapse: collapse; }
+    .import-preview th {
+      padding: 6px 10px; text-align: left; background: var(--surface2);
+      color: var(--dim); font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; position: sticky; top: 0;
+    }
+    .import-preview td { padding: 5px 10px; border-top: 1px solid var(--border); }
+
+    /* ── Password screen ── */
+    .pwd-screen {
+      position: fixed; inset: 0; z-index: 2000;
+      background: var(--bg); display: flex; align-items: center; justify-content: center;
+    }
+    .pwd-screen.hidden { display: none; }
+    .pwd-box {
+      background: var(--surface); border: 1px solid var(--border2); border-radius: 12px;
+      padding: 40px 36px; width: 100%; max-width: 360px; text-align: center;
+    }
+    .pwd-logo {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--dim); font-family: 'Geist Mono', monospace; margin-bottom: 6px;
+    }
+    .pwd-title {
+      font-size: 22px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 28px;
+    }
+    .pwd-input {
+      width: 100%; padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-family: inherit; font-size: 14px;
+      text-align: center; outline: none; transition: border-color 0.15s; margin-bottom: 12px;
+      letter-spacing: 0.1em;
+    }
+    .pwd-input:focus { border-color: var(--accent); }
+    .pwd-input.error { border-color: #e86b6b; animation: shake 0.3s; }
+    .pwd-error { font-size: 11px; color: #e86b6b; margin-top: 8px; min-height: 16px; }
+    .pwd-submit {
+      width: 100%; padding: 11px; background: var(--accent); color: #0c0c0e;
+      border: none; border-radius: 7px; font-family: inherit; font-size: 13px;
+      font-weight: 700; letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
+    }
+    .pwd-submit:hover { background: #ffd700; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
     }
 
+    /* ── Toast ── */
+    @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--surface3); border: 1px solid var(--border2);
+      color: var(--text); padding: 9px 18px; border-radius: 8px;
+      font-size: 12px; z-index: 9999; white-space: nowrap;
+      animation: toastIn 0.2s ease; pointer-events: none;
+    }
+    .toast.error { border-color: rgba(232,107,107,0.4); color: #e86b6b; }
+
     /* Scrollbar */
-    .modal::-webkit-scrollbar { width: 4px; }
-    .modal::-webkit-scrollbar-track { background: transparent; }
-    .modal::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .modal::-webkit-scrollbar, .import-preview::-webkit-scrollbar { width: 4px; }
+    .modal::-webkit-scrollbar-track, .import-preview::-webkit-scrollbar-track { background: transparent; }
+    .modal::-webkit-scrollbar-thumb, .import-preview::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
   </style>
 </head>
 <body>
-  <div class="page-wrap">
+
+  <!-- ── Password Screen ── -->
+  <div class="pwd-screen hidden" id="pwd-screen">
+    <div class="pwd-box">
+      <div class="pwd-logo">dftf.io</div>
+      <div class="pwd-title">Scene Tracker</div>
+      <input type="password" class="pwd-input" id="pwd-input" placeholder="Password" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')tryLogin()">
+      <button class="pwd-submit" onclick="tryLogin()">Enter</button>
+      <div class="pwd-error" id="pwd-error"></div>
+    </div>
+  </div>
+
+  <!-- ── App ── -->
+  <div class="page-wrap" id="app">
     <a class="site-back" href="https://dftf.io">← dftf.io</a>
 
     <div class="page-header">
@@ -315,29 +372,43 @@
             List
           </button>
         </div>
+
+        <!-- CSV -->
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('csv-file-input').click()" title="Import CSV">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Import
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()" title="Export CSV">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 10V1M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Export
+        </button>
+
         <button class="btn btn-ghost btn-sm" onclick="openReelModal()">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Manage Reels
+          Reels
         </button>
+
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="openPwdSettings()" title="Access settings">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+
         <button class="btn btn-primary btn-sm" onclick="openSceneModal()">+ Add Scene</button>
       </div>
     </div>
 
     <div class="stats-bar" id="stats-bar"></div>
 
-    <!-- At-a-glance view -->
     <div id="view-glance">
       <div class="glance-grid" id="glance-grid"></div>
     </div>
 
-    <!-- List view -->
     <div id="view-list" style="display:none">
       <div class="list-table-wrap">
         <table class="list-table">
           <thead>
             <tr>
-              <th id="th-name" onclick="sortBy('name')">Scene <span class="sort-arrow" id="sa-name"></span></th>
-              <th id="th-reel" onclick="sortBy('reel')">Reel <span class="sort-arrow" id="sa-reel"></span></th>
+              <th id="th-name"   onclick="sortBy('name')">Scene <span class="sort-arrow" id="sa-name"></span></th>
+              <th id="th-reel"   onclick="sortBy('reel')">Reel <span class="sort-arrow" id="sa-reel"></span></th>
               <th id="th-status" onclick="sortBy('status')">Status <span class="sort-arrow" id="sa-status"></span></th>
               <th>Notes</th>
               <th></th>
@@ -349,7 +420,10 @@
     </div>
   </div>
 
-  <!-- Scene Modal -->
+  <!-- Hidden CSV file input -->
+  <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="handleCSVFile(event)">
+
+  <!-- ── Scene Modal ── -->
   <div class="modal-overlay hidden" id="scene-modal-overlay" onclick="handleOverlayClick(event,'scene-modal-overlay')">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-header">
@@ -376,14 +450,14 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-danger btn-sm" id="scene-delete-btn" style="margin-right:auto;display:none" onclick="deleteScene()">Delete Scene</button>
+        <button class="btn btn-danger btn-sm" id="scene-delete-btn" style="margin-right:auto;display:none" onclick="deleteScene()">Delete</button>
         <button class="btn btn-ghost btn-sm" onclick="closeSceneModal()">Cancel</button>
         <button class="btn btn-primary btn-sm" onclick="saveScene()">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- Reel Manager Modal -->
+  <!-- ── Reel Modal ── -->
   <div class="modal-overlay hidden" id="reel-modal-overlay" onclick="handleOverlayClick(event,'reel-modal-overlay')">
     <div class="modal modal-wide" onclick="event.stopPropagation()">
       <div class="modal-header">
@@ -391,7 +465,7 @@
         <button class="modal-close" onclick="closeReelModal()">×</button>
       </div>
       <div class="modal-body">
-        <p class="reel-mgr-note">Reels define the columns in At-a-Glance view and the assignment options for each scene.</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Reels define the columns in At-a-Glance view and the assignment options for each scene.</p>
         <div class="reel-mgr-list" id="reel-mgr-list"></div>
         <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="addTempReel()">+ Add Reel</button>
       </div>
@@ -402,12 +476,59 @@
     </div>
   </div>
 
+  <!-- ── Import Preview Modal ── -->
+  <div class="modal-overlay hidden" id="import-modal-overlay" onclick="handleOverlayClick(event,'import-modal-overlay')">
+    <div class="modal modal-wide" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">Import CSV</div>
+        <button class="modal-close" onclick="closeImportModal()">×</button>
+      </div>
+      <div class="modal-body" id="import-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmImport()">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Password Settings Modal ── -->
+  <div class="modal-overlay hidden" id="pwd-settings-overlay" onclick="handleOverlayClick(event,'pwd-settings-overlay')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">Access Password</div>
+        <button class="modal-close" onclick="closePwdSettings()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7">Set a password to restrict access. Authenticated devices are remembered automatically.</p>
+        <div class="form-group" id="pwd-current-group" style="display:none">
+          <label class="form-label">Current Password</label>
+          <input type="password" class="form-input" id="pwd-current" placeholder="Enter current password" autocomplete="current-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" class="form-input" id="pwd-new" placeholder="Leave blank to remove password" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" class="form-input" id="pwd-confirm" placeholder="Confirm new password" autocomplete="new-password">
+        </div>
+        <div id="pwd-settings-error" style="display:none;color:#e86b6b;font-size:12px;margin-top:4px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closePwdSettings()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="savePwdSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ─────────────────────────────────────────────────────────────────────────
     // Constants
     // ─────────────────────────────────────────────────────────────────────────
 
     const STORAGE_KEY = 'dftf_scene_tracker_v1';
+    const AUTH_KEY    = 'dftf_st_auth_v1';
+    const PWD_KEY     = 'dftf_st_pwd_v1';
 
     const STATUSES = [
       { key: 'complete',     label: 'Complete',           color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)'   },
@@ -427,10 +548,10 @@
     // ─────────────────────────────────────────────────────────────────────────
 
     let state = {
-      reels: ['R1', 'R2', 'R3', 'R4'],
+      reels:  ['R1', 'R2', 'R3', 'R4'],
       scenes: [],
-      view: 'glance',
-      sort: { col: 'reel', dir: 1 },
+      view:   'glance',
+      sort:   { col: 'reel', dir: 1 },
     };
 
     function loadState() {
@@ -447,9 +568,7 @@
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          reels:  state.reels,
-          scenes: state.scenes,
-          view:   state.view,
+          reels: state.reels, scenes: state.scenes, view: state.view,
         }));
       } catch(e) {}
     }
@@ -463,7 +582,7 @@
     }
 
     function statusFor(key) {
-      return STATUSES.find(s => s.key === key) || STATUSES[2]; // default: To Do
+      return STATUSES.find(s => s.key === key) || STATUSES[2];
     }
 
     function badge(statusKey) {
@@ -472,18 +591,130 @@
     }
 
     function esc(str) {
-      return (str || '')
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;');
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     function handleOverlayClick(e, id) {
       if (e.target === document.getElementById(id)) {
-        if (id === 'scene-modal-overlay') closeSceneModal();
-        if (id === 'reel-modal-overlay')  closeReelModal();
+        const fns = {
+          'scene-modal-overlay': closeSceneModal,
+          'reel-modal-overlay':  closeReelModal,
+          'import-modal-overlay': closeImportModal,
+          'pwd-settings-overlay': closePwdSettings,
+        };
+        if (fns[id]) fns[id]();
       }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Toast
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let toastTimer;
+    function showToast(msg, type) {
+      clearTimeout(toastTimer);
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const el = document.createElement('div');
+      el.className = 'toast' + (type === 'error' ? ' error' : '');
+      el.textContent = msg;
+      document.body.appendChild(el);
+      toastTimer = setTimeout(() => el.remove(), 3000);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Password / Auth
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function getStoredPwd() {
+      return localStorage.getItem(PWD_KEY) || '';
+    }
+
+    function authToken(pwd) {
+      // Simple client-side token — enough for casual protection
+      return btoa('dftf_st:' + pwd + ':auth_v1');
+    }
+
+    function isDeviceAuthed() {
+      const pwd = getStoredPwd();
+      if (!pwd) return true; // No password set → always authed
+      return localStorage.getItem(AUTH_KEY) === authToken(pwd);
+    }
+
+    function setDeviceAuthed(pwd) {
+      localStorage.setItem(AUTH_KEY, authToken(pwd));
+    }
+
+    function tryLogin() {
+      const entered = document.getElementById('pwd-input').value;
+      const stored  = getStoredPwd();
+      if (entered === stored) {
+        setDeviceAuthed(stored);
+        document.getElementById('pwd-screen').classList.add('hidden');
+        document.getElementById('pwd-input').value = '';
+      } else {
+        const input = document.getElementById('pwd-input');
+        const err   = document.getElementById('pwd-error');
+        input.classList.add('error');
+        err.textContent = 'Incorrect password';
+        input.value = '';
+        setTimeout(() => { input.classList.remove('error'); err.textContent = ''; }, 1500);
+      }
+    }
+
+    function openPwdSettings() {
+      const hasPwd = !!getStoredPwd();
+      document.getElementById('pwd-current-group').style.display = hasPwd ? '' : 'none';
+      document.getElementById('pwd-current').value  = '';
+      document.getElementById('pwd-new').value      = '';
+      document.getElementById('pwd-confirm').value  = '';
+      document.getElementById('pwd-settings-error').style.display = 'none';
+      document.getElementById('pwd-settings-overlay').classList.remove('hidden');
+      setTimeout(() => {
+        const focus = hasPwd ? 'pwd-current' : 'pwd-new';
+        document.getElementById(focus).focus();
+      }, 50);
+    }
+
+    function closePwdSettings() {
+      document.getElementById('pwd-settings-overlay').classList.add('hidden');
+    }
+
+    function savePwdSettings() {
+      const errEl   = document.getElementById('pwd-settings-error');
+      const hasPwd  = !!getStoredPwd();
+      const current = document.getElementById('pwd-current').value;
+      const newPwd  = document.getElementById('pwd-new').value;
+      const confirm = document.getElementById('pwd-confirm').value;
+
+      errEl.style.display = 'none';
+
+      // Verify current password if set
+      if (hasPwd && current !== getStoredPwd()) {
+        errEl.textContent = 'Current password is incorrect';
+        errEl.style.display = '';
+        return;
+      }
+
+      // If setting a new password, confirm must match
+      if (newPwd && newPwd !== confirm) {
+        errEl.textContent = 'Passwords do not match';
+        errEl.style.display = '';
+        return;
+      }
+
+      if (newPwd) {
+        localStorage.setItem(PWD_KEY, newPwd);
+        setDeviceAuthed(newPwd);
+        showToast('Password set — this device is remembered');
+      } else {
+        // Remove password
+        localStorage.removeItem(PWD_KEY);
+        localStorage.removeItem(AUTH_KEY);
+        showToast('Password removed');
+      }
+
+      closePwdSettings();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -503,7 +734,6 @@
 
       const total = state.scenes.length;
       let html = `<div class="stat-chip"><span class="stat-count">${total}</span><span class="stat-lbl">&nbsp;scenes</span></div>`;
-
       STATUSES.forEach(s => {
         if (counts[s.key] > 0) {
           html += `<div class="stat-chip">
@@ -513,7 +743,6 @@
           </div>`;
         }
       });
-
       document.getElementById('stats-bar').innerHTML = html;
     }
 
@@ -530,9 +759,10 @@
         return;
       }
 
-      let html = '';
+      // Save focused reel so we can restore after re-render
+      const focusedReel = document.activeElement?.dataset?.reel || null;
 
-      // Reel columns
+      let html = '';
       state.reels.forEach(reel => {
         const scenes = state.scenes.filter(s => s.reel === reel);
         html += `<div class="reel-col">
@@ -553,10 +783,16 @@
           });
         }
 
-        html += `</div></div>`;
+        // Quick-add input
+        html += `</div>
+          <div class="reel-quick-add">
+            <input class="reel-quick-input" placeholder="+ quick add…" data-reel="${esc(reel)}"
+              onkeydown="handleQuickAdd(event)">
+          </div>
+        </div>`;
       });
 
-      // Unassigned column (scenes whose reel no longer exists)
+      // Unassigned column
       const unassigned = state.scenes.filter(s => !state.reels.includes(s.reel));
       if (unassigned.length > 0) {
         html += `<div class="reel-col" style="border-color:rgba(232,107,107,0.3)">
@@ -574,16 +810,22 @@
         html += `</div></div>`;
       }
 
-      // If only reels exist but no scenes at all, show add-scene hint
       if (state.scenes.length === 0) {
-        html += `<div style="grid-column:1/-1;text-align:center;padding:20px 0 8px">
+        html += `<div style="grid-column:1/-1;text-align:center;padding:16px 0 4px">
           <span style="font-size:12px;color:var(--dim);font-family:'Geist Mono',monospace;letter-spacing:0.06em">
-            Reels configured — click <strong style="color:var(--accent)">+ Add Scene</strong> to begin tracking
+            Type a scene name into any reel column to quick-add, or click <strong style="color:var(--accent)">+ Add Scene</strong>
           </span>
         </div>`;
       }
 
       grid.innerHTML = html;
+
+      // Restore focus
+      if (focusedReel) {
+        const inp = [...document.querySelectorAll('.reel-quick-input')]
+          .find(el => el.dataset.reel === focusedReel);
+        if (inp) inp.focus();
+      }
     }
 
     function renderList() {
@@ -616,13 +858,11 @@
           <td><span class="reel-tag">${esc(sc.reel || '—')}</span></td>
           <td>${badge(sc.status)}</td>
           <td class="notes-cell" title="${esc(sc.notes)}">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
-          <td>
-            <div class="row-actions">
-              <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit scene">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-              </button>
-            </div>
-          </td>
+          <td><div class="row-actions">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </button>
+          </div></td>
         </tr>
       `).join('');
 
@@ -665,40 +905,52 @@
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Scene modal
+    // Quick-add (reel columns)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function handleQuickAdd(e) {
+      const input = e.target;
+      if (e.key === 'Escape') { input.value = ''; input.blur(); return; }
+      if (e.key !== 'Enter') return;
+      const name = input.value.trim();
+      if (!name) return;
+      const reel = input.dataset.reel;
+      state.scenes.push({ id: uid(), name, reel, status: 'todo', notes: '' });
+      saveState();
+      renderGlance(); // restores focus via focusedReel logic
+      renderStats();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Scene Modal
     // ─────────────────────────────────────────────────────────────────────────
 
     function openSceneModal(id) {
-      const overlay  = document.getElementById('scene-modal-overlay');
-      const delBtn   = document.getElementById('scene-delete-btn');
-      const reelSel  = document.getElementById('scene-reel');
+      const overlay   = document.getElementById('scene-modal-overlay');
+      const delBtn    = document.getElementById('scene-delete-btn');
+      const reelSel   = document.getElementById('scene-reel');
       const statusSel = document.getElementById('scene-status');
 
-      // Build reel options
-      if (state.reels.length > 0) {
-        reelSel.innerHTML = state.reels.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
-      } else {
-        reelSel.innerHTML = `<option value="">No reels configured</option>`;
-      }
-
-      // Build status options
+      reelSel.innerHTML   = state.reels.length
+        ? state.reels.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('')
+        : `<option value="">No reels configured</option>`;
       statusSel.innerHTML = STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
 
       if (id) {
         const sc = state.scenes.find(s => s.id === id);
         if (!sc) return;
         document.getElementById('scene-modal-title').textContent = 'Edit Scene';
-        document.getElementById('scene-id').value = sc.id;
-        document.getElementById('scene-name').value = sc.name;
-        reelSel.value = sc.reel;
+        document.getElementById('scene-id').value    = sc.id;
+        document.getElementById('scene-name').value  = sc.name;
+        reelSel.value   = sc.reel;
         statusSel.value = sc.status;
         document.getElementById('scene-notes').value = sc.notes || '';
         delBtn.style.display = '';
       } else {
         document.getElementById('scene-modal-title').textContent = 'Add Scene';
-        document.getElementById('scene-id').value = '';
-        document.getElementById('scene-name').value = '';
-        reelSel.value = state.reels[0] || '';
+        document.getElementById('scene-id').value    = '';
+        document.getElementById('scene-name').value  = '';
+        reelSel.value   = state.reels[0] || '';
         statusSel.value = 'todo';
         document.getElementById('scene-notes').value = '';
         delBtn.style.display = 'none';
@@ -715,12 +967,11 @@
     function saveScene() {
       const name = document.getElementById('scene-name').value.trim();
       if (!name) {
-        document.getElementById('scene-name').focus();
-        document.getElementById('scene-name').style.borderColor = '#e86b6b';
-        setTimeout(() => document.getElementById('scene-name').style.borderColor = '', 1200);
+        const inp = document.getElementById('scene-name');
+        inp.focus(); inp.style.borderColor = '#e86b6b';
+        setTimeout(() => inp.style.borderColor = '', 1200);
         return;
       }
-
       const id   = document.getElementById('scene-id').value;
       const data = {
         name,
@@ -728,31 +979,24 @@
         status: document.getElementById('scene-status').value,
         notes:  document.getElementById('scene-notes').value.trim(),
       };
-
       if (id) {
         const idx = state.scenes.findIndex(s => s.id === id);
         if (idx >= 0) state.scenes[idx] = { ...state.scenes[idx], ...data };
       } else {
         state.scenes.push({ id: uid(), ...data });
       }
-
-      saveState();
-      closeSceneModal();
-      render();
+      saveState(); closeSceneModal(); render();
     }
 
     function deleteScene() {
       const id = document.getElementById('scene-id').value;
-      if (!id) return;
-      if (!confirm('Delete this scene? This cannot be undone.')) return;
+      if (!id || !confirm('Delete this scene? This cannot be undone.')) return;
       state.scenes = state.scenes.filter(s => s.id !== id);
-      saveState();
-      closeSceneModal();
-      render();
+      saveState(); closeSceneModal(); render();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Reel manager modal
+    // Reel Modal
     // ─────────────────────────────────────────────────────────────────────────
 
     let tempReels = [];
@@ -780,36 +1024,193 @@
           <button class="btn btn-danger btn-icon btn-sm" onclick="removeTempReel(${i})" title="Remove">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
     function addTempReel() {
       tempReels.push(`R${tempReels.length + 1}`);
       renderReelMgr();
-      // Focus the new input
       const inputs = document.querySelectorAll('.reel-mgr-input');
       if (inputs.length) inputs[inputs.length - 1].focus();
     }
 
     function removeTempReel(i) {
-      const reelName  = tempReels[i];
-      const affected  = state.scenes.filter(s => s.reel === reelName).length;
-      if (affected > 0) {
-        if (!confirm(`"${reelName}" has ${affected} scene(s) assigned. Remove reel anyway? Those scenes will show as Unassigned.`)) return;
-      }
+      const name     = tempReels[i];
+      const affected = state.scenes.filter(s => s.reel === name).length;
+      if (affected > 0 && !confirm(`"${name}" has ${affected} scene(s) assigned. Remove anyway?`)) return;
       tempReels.splice(i, 1);
       renderReelMgr();
     }
 
     function saveReels() {
-      // Read current input values (oninput keeps tempReels in sync but re-read to be safe)
       const inputs = document.querySelectorAll('.reel-mgr-input');
       tempReels = [...inputs].map(el => el.value.trim()).filter(Boolean);
       state.reels = tempReels;
+      saveState(); closeReelModal(); render();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CSV — helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function csvEsc(val) {
+      const s = String(val || '');
+      return (s.includes(',') || s.includes('"') || s.includes('\n'))
+        ? '"' + s.replace(/"/g, '""') + '"'
+        : s;
+    }
+
+    function parseCSVLine(line) {
+      const cells = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+          else inQ = !inQ;
+        } else if (ch === ',' && !inQ) {
+          cells.push(cur); cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      cells.push(cur);
+      return cells;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CSV — Export
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function exportCSV() {
+      if (state.scenes.length === 0) { showToast('No scenes to export', 'error'); return; }
+
+      const rows = [['name','reel','status','notes']];
+      state.scenes.forEach(sc => {
+        rows.push([
+          csvEsc(sc.name),
+          csvEsc(sc.reel),
+          csvEsc(statusFor(sc.status).label),
+          csvEsc(sc.notes || ''),
+        ]);
+      });
+
+      const csv  = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = Object.assign(document.createElement('a'), { href: url, download: 'scenes.csv' });
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${state.scenes.length} scene(s)`);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CSV — Import
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let pendingImport = null;
+
+    function handleCSVFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => parseAndPreviewCSV(ev.target.result);
+      reader.readAsText(file);
+    }
+
+    function parseAndPreviewCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) { showToast('CSV needs a header row and at least one data row', 'error'); return; }
+
+      const headers  = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      const nameIdx  = headers.findIndex(h => ['name','scene','scene name'].includes(h));
+      const reelIdx  = headers.findIndex(h => h === 'reel');
+      const stIdx    = headers.findIndex(h => h === 'status');
+      const notesIdx = headers.findIndex(h => ['notes','note'].includes(h));
+
+      if (nameIdx === -1) {
+        showToast('CSV must have a "name" or "scene" column', 'error');
+        document.getElementById('csv-file-input').value = '';
+        return;
+      }
+
+      const scenes    = [];
+      const newReelSt = new Set();
+
+      for (let i = 1; i < lines.length; i++) {
+        const cells = parseCSVLine(lines[i]);
+        const name  = cells[nameIdx]?.trim();
+        if (!name) continue;
+
+        const reel    = reelIdx  >= 0 ? (cells[reelIdx]?.trim()  || '') : '';
+        const stLabel = stIdx    >= 0 ? (cells[stIdx]?.trim()    || '') : '';
+        const notes   = notesIdx >= 0 ? (cells[notesIdx]?.trim() || '') : '';
+
+        let statusKey = 'todo';
+        if (stLabel) {
+          const match = STATUSES.find(s =>
+            s.label.toLowerCase() === stLabel.toLowerCase() || s.key === stLabel.toLowerCase()
+          );
+          if (match) statusKey = match.key;
+        }
+
+        if (reel && !state.reels.includes(reel) && !newReelSt.has(reel)) newReelSt.add(reel);
+        scenes.push({ id: uid(), name, reel, status: statusKey, notes });
+      }
+
+      if (scenes.length === 0) {
+        showToast('No valid scenes found in CSV', 'error');
+        document.getElementById('csv-file-input').value = '';
+        return;
+      }
+
+      pendingImport = { scenes, newReels: [...newReelSt] };
+
+      // Build preview
+      const { newReels } = pendingImport;
+      let body = `<p style="font-size:13px;margin-bottom:14px;color:var(--text2)">Ready to import:</p>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:14px">
+          <div>→ <strong>${scenes.length}</strong> scene(s) will be added</div>`;
+      if (newReels.length > 0) {
+        body += `<div>→ <strong>${newReels.length}</strong> new reel(s): ${newReels.map(r => `<span class="reel-tag">${esc(r)}</span>`).join(' ')}</div>`;
+      }
+      body += `</div>
+        <div class="import-preview">
+          <table>
+            <thead><tr>
+              <th>Scene</th><th>Reel</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+              ${scenes.slice(0, 25).map(sc => `<tr>
+                <td>${esc(sc.name)}</td>
+                <td>${esc(sc.reel) || '<span style="color:var(--dim)">—</span>'}</td>
+                <td>${badge(sc.status)}</td>
+              </tr>`).join('')}
+              ${scenes.length > 25 ? `<tr><td colspan="3" style="text-align:center;padding:8px;color:var(--dim)">…and ${scenes.length - 25} more</td></tr>` : ''}
+            </tbody>
+          </table>
+        </div>`;
+
+      document.getElementById('import-modal-body').innerHTML = body;
+      document.getElementById('import-modal-overlay').classList.remove('hidden');
+    }
+
+    function confirmImport() {
+      if (!pendingImport) return;
+      const { scenes, newReels } = pendingImport;
+      newReels.forEach(r => state.reels.push(r));
+      state.scenes = [...state.scenes, ...scenes];
       saveState();
-      closeReelModal();
+      closeImportModal();
       render();
+      showToast(`Imported ${scenes.length} scene(s)${newReels.length ? ` + ${newReels.length} reel(s)` : ''}`);
+      pendingImport = null;
+    }
+
+    function closeImportModal() {
+      document.getElementById('import-modal-overlay').classList.add('hidden');
+      document.getElementById('csv-file-input').value = '';
+      pendingImport = null;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -818,14 +1219,15 @@
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        closeSceneModal();
-        closeReelModal();
+        closeSceneModal(); closeReelModal(); closeImportModal(); closePwdSettings();
       }
       if (e.key === 'Enter' && !e.shiftKey) {
-        const sceneOverlay = document.getElementById('scene-modal-overlay');
-        if (!sceneOverlay.classList.contains('hidden') && document.activeElement?.tagName !== 'TEXTAREA') {
+        const sceneModal = document.getElementById('scene-modal-overlay');
+        if (!sceneModal.classList.contains('hidden') && document.activeElement?.tagName !== 'TEXTAREA') {
           saveScene();
         }
+        const importModal = document.getElementById('import-modal-overlay');
+        if (!importModal.classList.contains('hidden')) confirmImport();
       }
     });
 
@@ -834,6 +1236,12 @@
     // ─────────────────────────────────────────────────────────────────────────
 
     loadState();
+
+    if (!isDeviceAuthed()) {
+      document.getElementById('pwd-screen').classList.remove('hidden');
+      setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+    }
+
     setView(state.view || 'glance');
   </script>
 </body>
