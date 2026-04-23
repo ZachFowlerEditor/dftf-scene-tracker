@@ -80,14 +80,58 @@
     .view-btn:hover { color: var(--text); background: var(--surface2); }
     .view-btn.active { background: var(--surface2); color: var(--text); }
 
-    /* ── Stats ── */
-    .stats-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    /* ── Edit 1 Ready Tracker ── */
+    .edit1-tracker {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 10px;
+    }
+    .edit1-top {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px;
+    }
+    .edit1-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--dim); font-family: 'Geist Mono', monospace;
+    }
+    .edit1-right { display: flex; align-items: baseline; gap: 10px; }
+    .edit1-pct {
+      font-size: 24px; font-weight: 700; font-family: 'Geist Mono', monospace;
+      line-height: 1;
+    }
+    .edit1-count {
+      font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;
+    }
+    .edit1-bar-wrap {
+      height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;
+    }
+    .edit1-bar-fill {
+      height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
     .stat-chip {
       display: flex; align-items: center; gap: 5px; padding: 4px 10px;
       border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
       font-size: 10px; font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; white-space: nowrap;
     }
     .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .stat-mini-bar {
+      width: 24px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; flex-shrink: 0;
+    }
+    .stat-mini-fill { height: 100%; border-radius: 2px; }
+
+    /* ── Tag legend ── */
+    .tag-legend {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      margin-bottom: 16px; padding: 7px 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    }
+    .tag-legend-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--dim); font-family: 'Geist Mono', monospace; flex-shrink: 0;
+    }
+    .tag-legend-item { display: flex; align-items: center; gap: 5px; cursor: default; }
+    .tag-legend-name { font-size: 10px; color: var(--text2); font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; }
 
     /* ── Badge ── */
     .badge {
@@ -98,15 +142,20 @@
     .badge.clickable { cursor: pointer; transition: opacity 0.15s; }
     .badge.clickable:hover { opacity: 0.75; }
 
-    /* ── Tag chips ── */
+    /* ── Tag chips (list view) ── */
     .tag-chip {
       display: inline-block; padding: 1px 7px; border-radius: 20px;
       font-size: 9px; font-family: 'Geist Mono', monospace; font-weight: 500;
       letter-spacing: 0.06em; white-space: nowrap; border: 1px solid transparent;
     }
 
+    /* ── Tag dot (at-a-glance) ── */
+    .tag-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      flex-shrink: 0; cursor: default;
+    }
+
     /* ── AT-A-GLANCE ── */
-    /* Fixed 3-column grid */
     .glance-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
     }
@@ -124,25 +173,26 @@
 
     /* Scene card */
     .scene-card {
-      padding: 9px 11px; border-radius: 6px; border: 1px solid var(--border);
+      padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--bg); cursor: pointer; transition: all 0.12s;
     }
     .scene-card:hover { border-color: var(--border2); background: var(--surface2); }
     .scene-card-top {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 3px;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    }
+    .scene-card-main {
+      display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 0; overflow: hidden;
     }
     .scene-card-number {
       font-size: 11px; font-weight: 700; color: var(--text); font-family: 'Geist Mono', monospace;
-      letter-spacing: 0.06em; line-height: 1.3; flex: 1; min-width: 0;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      letter-spacing: 0.06em; flex-shrink: 0;
     }
-    .scene-card-name {
-      font-size: 11px; color: var(--text2); overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; margin-bottom: 5px;
+    .scene-card-name-inline {
+      font-size: 10px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .scene-card-footer { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; min-height: 14px; }
+    .scene-card-footer { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 5px; min-height: 9px; }
 
-    /* Quick-add */
+    /* Quick-add (glance) */
     .reel-quick-add { padding: 6px 7px 7px; border-top: 1px solid var(--border); }
     .reel-quick-input {
       width: 100%; padding: 5px 9px; background: transparent;
@@ -172,9 +222,9 @@
     .list-table th:hover:not(:last-child) { color: var(--text2); }
     .list-table th.sorted { color: var(--accent); }
     .sort-arrow { margin-left: 3px; opacity: 0.6; }
-    .list-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .list-table td { padding: 8px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .list-table tr:hover td { background: var(--surface2); }
-    .list-table tr:last-child td { border-bottom: none; }
+    .list-table tbody tr:last-child td { border-bottom: none; }
     .num-cell { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; white-space: nowrap; }
     .name-cell { font-weight: 500; }
     .reel-tag {
@@ -184,13 +234,42 @@
     }
     .reel-tag.clickable { cursor: pointer; transition: all 0.12s; }
     .reel-tag.clickable:hover { border-color: var(--border2); color: var(--text); }
-    .tags-cell { display: flex; flex-wrap: wrap; gap: 3px; }
+    .tags-cell { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; min-height: 22px; }
     .notes-cell { max-width: 200px; font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
-    .no-data-row td { text-align: center; padding: 52px 14px; color: var(--dim); font-size: 12px; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; }
+    .no-data-row td { text-align: center; padding: 52px 14px; color: var(--dim); font-size: 12px; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; border-bottom: none; }
+
+    /* Editable cells in list view */
+    .cell-editable { cursor: pointer; }
+    .cell-editable:hover { background: var(--surface3) !important; }
+    .inline-edit-input {
+      background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 3px 7px;
+      outline: none; width: 100%; min-width: 60px;
+    }
+    .inline-edit-input.mono { font-family: 'Geist Mono', monospace; font-size: 12px; }
+    .inline-edit-textarea {
+      background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 12px; padding: 4px 7px;
+      outline: none; width: 100%; resize: none; min-height: 48px; display: block;
+    }
+
+    /* List quick-add row */
+    .list-qa-row td {
+      border-top: 2px solid var(--border2); border-bottom: none;
+      background: var(--surface2); padding: 7px 14px;
+    }
+    .list-qa-input {
+      background: transparent; border: none;
+      border-bottom: 1px dashed rgba(255,255,255,0.12);
+      color: var(--text); font-family: inherit; font-size: 12px;
+      padding: 2px 0; outline: none; width: 100%;
+    }
+    .list-qa-input.mono { font-family: 'Geist Mono', monospace; }
+    .list-qa-input::placeholder { color: var(--dim); }
+    .list-qa-input:focus { border-bottom-color: var(--accent); }
 
     /* ── Custom Dropdown (Picker) ── */
-    /* Trigger element in forms */
     .cd-trigger {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
@@ -204,7 +283,6 @@
     .cd-caret { transition: transform 0.15s; color: var(--dim); flex-shrink: 0; }
     .cd-trigger.open .cd-caret { transform: rotate(180deg); }
 
-    /* Floating panel (appended to body) */
     .cd-panel {
       position: fixed; z-index: 2000;
       background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
@@ -220,8 +298,8 @@
     .cd-option:hover { background: var(--surface2); }
     .cd-option.active { background: var(--surface2); }
     .cd-option-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    .cd-option-label { font-size: 13px; color: var(--text); }
-    .cd-option-check { margin-left: auto; color: var(--accent); font-size: 12px; }
+    .cd-option-label { font-size: 13px; color: var(--text); flex: 1; }
+    .cd-option-check { color: var(--accent); font-size: 12px; }
     .cd-divider { height: 1px; background: var(--border); margin: 4px 0; }
     .cd-action { display: flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer; color: var(--text2); font-size: 12px; transition: all 0.1s; }
     .cd-action:hover { background: var(--surface2); color: var(--text); }
@@ -398,7 +476,14 @@
       </div>
     </div>
 
+    <!-- Edit 1 Ready tracker slot -->
+    <div id="edit1-tracker-slot"></div>
+
+    <!-- Status stat chips -->
     <div class="stats-bar" id="stats-bar"></div>
+
+    <!-- Tag legend -->
+    <div class="tag-legend" id="tag-legend" style="display:none"></div>
 
     <div id="view-glance">
       <div class="glance-grid" id="glance-grid"></div>
@@ -419,6 +504,7 @@
             </tr>
           </thead>
           <tbody id="list-body"></tbody>
+          <tfoot id="list-tfoot"></tfoot>
         </table>
       </div>
     </div>
@@ -438,7 +524,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Scene Number</label>
-            <input type="text" class="form-input" id="scene-number" placeholder="e.g. 01_0010" autocomplete="off" style="font-family:'Geist Mono',monospace">
+            <input type="text" class="form-input" id="scene-number" placeholder="e.g. 001" autocomplete="off" style="font-family:'Geist Mono',monospace">
           </div>
           <div class="form-group">
             <label class="form-label">Reel</label>
@@ -605,7 +691,7 @@
   const PWD_KEY     = 'dftf_st_pwd_v1';
 
   const DEFAULT_STATUSES = [
-    { key: 'complete',     label: 'Complete',           color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)',    builtin: true },
+    { key: 'complete',     label: 'Edit 1 Ready',       color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)',    builtin: true },
     { key: 'in-progress',  label: 'In Progress',        color: '#7eb0e8', bg: 'rgba(46,80,128,0.22)',    builtin: true },
     { key: 'todo',         label: 'To Do',              color: '#e8b84b', bg: 'rgba(122,90,26,0.22)',    builtin: true },
     { key: 'ready',        label: 'Ready to Edit',      color: '#4dc8c8', bg: 'rgba(26,92,92,0.22)',     builtin: true },
@@ -636,6 +722,9 @@
     sort:     { col: 'reel', dir: 1 },
   };
 
+  // List quick-add persistent state
+  let _listQA = { reel: '', status: 'todo' };
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -644,8 +733,13 @@
       if (Array.isArray(s.reels))    state.reels    = s.reels;
       if (Array.isArray(s.scenes))   state.scenes   = s.scenes;
       if (Array.isArray(s.tags))     state.tags     = s.tags;
-      if (Array.isArray(s.statuses)) state.statuses = s.statuses;
-      if (s.view)                    state.view     = s.view;
+      if (Array.isArray(s.statuses)) {
+        // Migrate: rename old 'Complete' to 'Edit 1 Ready'
+        const comp = s.statuses.find(st => st.key === 'complete');
+        if (comp && comp.label === 'Complete') comp.label = 'Edit 1 Ready';
+        state.statuses = s.statuses;
+      }
+      if (s.view) state.view = s.view;
     } catch(e) {}
   }
 
@@ -670,25 +764,45 @@
 
   function tagFor(id) { return state.tags.find(t => t.id === id); }
 
+  /** Pad a purely numeric string to 3 digits. Non-numeric strings pass through unchanged. */
+  function padSceneNum(val) {
+    if (!val) return val;
+    const t = String(val).trim();
+    if (/^\d+$/.test(t)) return t.padStart(3, '0');
+    return t;
+  }
+
+  /** Return the next auto-number for a reel (highest existing numeric + 1, padded to 3 digits). */
+  function getNextReelNumber(reel) {
+    const nums = state.scenes
+      .filter(s => s.reel === reel)
+      .map(s => parseInt(s.number, 10))
+      .filter(n => !isNaN(n));
+    const max = nums.length > 0 ? Math.max(...nums) : 0;
+    return String(max + 1).padStart(3, '0');
+  }
+
   function badge(statusKey, clickable, sceneId) {
     const s = statusFor(statusKey);
     const cls = clickable ? ' clickable' : '';
     const onclick = clickable
       ? `onclick="event.stopPropagation();openInlineStatusPicker(event,this,'${sceneId}')"`
       : '';
-    return `<span class="badge${cls}" style="color:${s.color};background:${s.bg}" ${onclick}>${s.label}</span>`;
+    return `<span class="badge${cls}" style="color:${s.color};background:${s.bg}" ${onclick}>${esc(s.label)}</span>`;
   }
 
+  /** Tag chip for list view (text label) */
   function tagChip(tagId) {
     const t = tagFor(tagId);
     if (!t) return '';
-    const textColor = lightenColor(t.color);
-    return `<span class="tag-chip" style="color:${textColor};background:${t.color}22;border-color:${t.color}44">${esc(t.label)}</span>`;
+    return `<span class="tag-chip" style="color:${t.color};background:${t.color}22;border-color:${t.color}44">${esc(t.label)}</span>`;
   }
 
-  function lightenColor(hex) {
-    // Make tag text slightly lighter than bg color
-    return hex;
+  /** Tag dot for at-a-glance (color only) */
+  function tagDot(tagId) {
+    const t = tagFor(tagId);
+    if (!t) return '';
+    return `<span class="tag-dot" style="background:${t.color}" title="${esc(t.label)}"></span>`;
   }
 
   function esc(str) {
@@ -698,12 +812,12 @@
   function handleOverlayClick(e, id) {
     if (e.target === document.getElementById(id)) {
       ({
-        'scene-modal-overlay': closeSceneModal,
-        'reel-modal-overlay':  closeReelModal,
-        'tag-modal-overlay':   closeTagModal,
-        'status-mgr-overlay':  closeStatusMgrModal,
-        'import-modal-overlay': closeImportModal,
-        'pwd-settings-overlay': closePwdSettings,
+        'scene-modal-overlay':   closeSceneModal,
+        'reel-modal-overlay':    closeReelModal,
+        'tag-modal-overlay':     closeTagModal,
+        'status-mgr-overlay':    closeStatusMgrModal,
+        'import-modal-overlay':  closeImportModal,
+        'pwd-settings-overlay':  closePwdSettings,
       })[id]?.();
     }
   }
@@ -727,14 +841,18 @@
   // Custom Dropdown (Picker)
   // ────────────────────────────────────────────────────────────────────────────
 
-  let _pickerMeta = null; // { sceneId, field, triggerEl }
+  let _pickerMeta      = null;
+  let _tagPickerSceneId = null;
+  let _tagPickerAnchorEl = null;
 
   function Picker_close() {
     const panel = document.getElementById('cd-panel');
     panel.style.display = 'none';
     panel.innerHTML = '';
     if (_pickerMeta?.triggerEl) _pickerMeta.triggerEl.classList?.remove('open');
-    _pickerMeta = null;
+    _pickerMeta       = null;
+    _tagPickerSceneId  = null;
+    _tagPickerAnchorEl = null;
     document.removeEventListener('mousedown', Picker_outsideHandler, true);
   }
 
@@ -766,20 +884,19 @@
     if (anchorEl) anchorEl.classList?.add('open');
     _pickerMeta = { triggerEl: anchorEl };
 
-    // Position
     panel.style.display = 'block';
     const rect = anchorEl.getBoundingClientRect();
     const panelH = Math.min(320, options.length * 38 + 8);
     const spaceBelow = window.innerHeight - rect.bottom - 8;
     const spaceAbove = rect.top - 8;
-    panel.style.left  = rect.left + 'px';
+    panel.style.left     = rect.left + 'px';
     panel.style.minWidth = rect.width + 'px';
     if (spaceBelow >= panelH || spaceBelow >= spaceAbove) {
-      panel.style.top  = (rect.bottom + 4) + 'px';
+      panel.style.top    = (rect.bottom + 4) + 'px';
       panel.style.bottom = '';
     } else {
       panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-      panel.style.top  = '';
+      panel.style.top    = '';
     }
 
     setTimeout(() => document.addEventListener('mousedown', Picker_outsideHandler, true), 0);
@@ -830,6 +947,210 @@
   }
 
   // ────────────────────────────────────────────────────────────────────────────
+  // Inline Tag Picker (list view multi-select)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  function openInlineTagPicker(event, anchorEl, sceneId) {
+    event.stopPropagation();
+    // If same picker already open, close it
+    if (_tagPickerSceneId === sceneId) { Picker_close(); return; }
+    Picker_close();
+    _tagPickerSceneId  = sceneId;
+    _tagPickerAnchorEl = anchorEl;
+    _pickerMeta        = { triggerEl: anchorEl };
+
+    const panel = document.getElementById('cd-panel');
+    panel.className = 'cd-panel';
+    buildTagPickerPanel(panel);
+
+    panel.style.display = 'block';
+    const rect = anchorEl.getBoundingClientRect();
+    const panelH = Math.min(300, (state.tags.length || 1) * 38 + 48);
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const spaceAbove = rect.top - 8;
+    panel.style.left     = rect.left + 'px';
+    panel.style.minWidth = Math.max(180, rect.width) + 'px';
+    if (spaceBelow >= panelH || spaceBelow >= spaceAbove) {
+      panel.style.top    = (rect.bottom + 4) + 'px';
+      panel.style.bottom = '';
+    } else {
+      panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+      panel.style.top    = '';
+    }
+
+    setTimeout(() => document.addEventListener('mousedown', Picker_outsideHandler, true), 0);
+  }
+
+  function buildTagPickerPanel(panelArg) {
+    const panel = panelArg || document.getElementById('cd-panel');
+    const sc = state.scenes.find(s => s.id === _tagPickerSceneId);
+    if (!sc) { Picker_close(); return; }
+
+    if (state.tags.length === 0) {
+      panel.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:var(--text2)">No tags yet — click Tags to add some</div>`;
+      return;
+    }
+
+    panel.innerHTML = state.tags.map(t => {
+      const selected = (sc.tags || []).includes(t.id);
+      return `<div class="cd-option${selected ? ' active' : ''}"
+        onclick="event.stopPropagation();toggleTagInPicker('${t.id}')">
+        <span class="cd-option-dot" style="background:${t.color}"></span>
+        <span class="cd-option-label">${esc(t.label)}</span>
+        ${selected ? '<span class="cd-option-check">✓</span>' : ''}
+      </div>`;
+    }).join('') + `<div class="cd-divider"></div>
+      <div class="cd-action" onclick="event.stopPropagation();Picker_close()">Done</div>`;
+  }
+
+  function toggleTagInPicker(tagId) {
+    const sc = state.scenes.find(s => s.id === _tagPickerSceneId);
+    if (!sc) return;
+    const tags = sc.tags || [];
+    sc.tags = tags.includes(tagId) ? tags.filter(id => id !== tagId) : [...tags, tagId];
+    saveState();
+    buildTagPickerPanel(); // update panel in-place without closing
+    // Update the tags cell directly without full re-render
+    if (_tagPickerAnchorEl) {
+      const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
+      _tagPickerAnchorEl.innerHTML = tagHtml || '<span style="color:var(--dim)">—</span>';
+    }
+    renderStats(); // update counts
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Inline editing (list view)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  let _inlineCancelled = false;
+
+  function startInlineEdit(event, sceneId, field) {
+    event.stopPropagation();
+    Picker_close();
+    const sc = state.scenes.find(s => s.id === sceneId);
+    if (!sc) return;
+    const td = event.currentTarget;
+    const val = sc[field] || '';
+    const isMono = field === 'number';
+    td.innerHTML = `<input class="inline-edit-input${isMono ? ' mono' : ''}"
+      value="${esc(val)}"
+      data-scene-id="${sceneId}" data-field="${field}"
+      onblur="saveInlineEdit(this)"
+      onkeydown="handleInlineEditKey(event,this)">`;
+    const inp = td.querySelector('input');
+    inp.focus(); inp.select();
+  }
+
+  function startInlineEditNotes(event, sceneId) {
+    event.stopPropagation();
+    Picker_close();
+    const sc = state.scenes.find(s => s.id === sceneId);
+    if (!sc) return;
+    const td = event.currentTarget;
+    td.innerHTML = `<textarea class="inline-edit-textarea"
+      data-scene-id="${sceneId}" data-field="notes"
+      onblur="saveInlineEdit(this)"
+      onkeydown="handleInlineEditKey(event,this)">${esc(sc.notes || '')}</textarea>`;
+    const ta = td.querySelector('textarea');
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+
+  function handleInlineEditKey(event, el) {
+    if (event.key === 'Enter' && el.tagName === 'INPUT') {
+      event.preventDefault();
+      el.blur();
+    }
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      event.preventDefault();
+      _inlineCancelled = true;
+      el.blur();
+      setTimeout(() => { _inlineCancelled = false; }, 10);
+    }
+  }
+
+  function saveInlineEdit(el) {
+    if (_inlineCancelled) { renderList(); return; }
+    const sceneId = el.dataset.sceneId;
+    const field   = el.dataset.field;
+    const sc = state.scenes.find(s => s.id === sceneId);
+    if (!sc) { renderList(); return; }
+    let val = el.value.trim();
+    if (field === 'number') val = padSceneNum(val);
+    sc[field] = val;
+    saveState();
+    renderList();
+    renderStats();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // List quick-add
+  // ────────────────────────────────────────────────────────────────────────────
+
+  function initListQA() {
+    if (!_listQA.reel) _listQA.reel = state.reels[0] || '';
+    if (!_listQA.status) _listQA.status = 'todo';
+  }
+
+  function renderListQARow() {
+    initListQA();
+    const autoNum = _listQA.reel ? getNextReelNumber(_listQA.reel) : '001';
+    const st = statusFor(_listQA.status);
+    return `<tr class="list-qa-row">
+      <td><input class="list-qa-input mono" id="lqa-number" placeholder="${autoNum}" style="width:56px" onkeydown="handleListQA(event)"></td>
+      <td colspan="1"><input class="list-qa-input" id="lqa-name" placeholder="+ quick add scene…" onkeydown="handleListQA(event)"></td>
+      <td><span class="reel-tag clickable" id="lqa-reel-btn" onclick="openListQAReelPicker(this)">${esc(_listQA.reel || '—')}</span></td>
+      <td><span class="badge clickable" id="lqa-status-btn" style="color:${st.color};background:${st.bg}" onclick="openListQAStatusPicker(this)">${esc(st.label)}</span></td>
+      <td></td>
+      <td></td>
+      <td><button class="btn btn-primary btn-icon btn-sm" onclick="saveListQA()" title="Add scene" style="padding:4px 8px;font-size:14px;line-height:1">+</button></td>
+    </tr>`;
+  }
+
+  function handleListQA(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveListQA(); }
+    if (e.key === 'Escape') {
+      const numEl  = document.getElementById('lqa-number');
+      const nameEl = document.getElementById('lqa-name');
+      if (numEl) numEl.value = '';
+      if (nameEl) nameEl.value = '';
+    }
+  }
+
+  function saveListQA() {
+    const numEl  = document.getElementById('lqa-number');
+    const nameEl = document.getElementById('lqa-name');
+    const name   = nameEl?.value.trim() || '';
+    let   number = numEl?.value.trim()  || '';
+    if (!name && !number) { nameEl?.focus(); return; }
+    number = number ? padSceneNum(number) : getNextReelNumber(_listQA.reel);
+    state.scenes.push({ id: uid(), number, name, reel: _listQA.reel, status: _listQA.status, notes: '', tags: [] });
+    saveState();
+    renderList();
+    renderStats();
+    setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
+  }
+
+  function openListQAReelPicker(el) {
+    const opts = state.reels.map(r => ({ value: r, label: r, color: null }));
+    Picker_open(el, opts, (reel) => {
+      _listQA.reel = reel;
+      renderList();
+      setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
+    }, _listQA.reel);
+  }
+
+  function openListQAStatusPicker(el) {
+    const opts = state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color }));
+    Picker_open(el, opts, (key) => {
+      _listQA.status = key;
+      renderList();
+      setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
+    }, _listQA.status);
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
   // Render
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -842,20 +1163,64 @@
   function renderStats() {
     const counts = {};
     state.statuses.forEach(s => counts[s.key] = 0);
-    state.scenes.forEach(sc => { if (counts[sc.status] !== undefined) counts[sc.status]++; else counts[sc.status] = 1; });
-
+    state.scenes.forEach(sc => {
+      if (counts[sc.status] !== undefined) counts[sc.status]++;
+      else counts[sc.status] = 1;
+    });
     const total = state.scenes.length;
-    let html = `<div class="stat-chip"><span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">scenes</span></div>`;
+
+    // ── Edit 1 Ready featured tracker ──
+    const e1Status  = state.statuses.find(s => s.key === 'complete') || { label: 'Edit 1 Ready', color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)' };
+    const e1Count   = counts['complete'] || 0;
+    const e1Pct     = total > 0 ? Math.round((e1Count / total) * 100) : 0;
+    const trackerEl = document.getElementById('edit1-tracker-slot');
+    if (trackerEl) {
+      trackerEl.innerHTML = `<div class="edit1-tracker">
+        <div class="edit1-top">
+          <span class="edit1-label">Tracking: ${esc(e1Status.label)}</span>
+          <div class="edit1-right">
+            <span class="edit1-count">${e1Count} / ${total} scene${total !== 1 ? 's' : ''}</span>
+            <span class="edit1-pct" style="color:${e1Status.color}">${e1Pct}%</span>
+          </div>
+        </div>
+        <div class="edit1-bar-wrap">
+          <div class="edit1-bar-fill" style="width:${e1Pct}%;background:${e1Status.color}"></div>
+        </div>
+      </div>`;
+    }
+
+    // ── Status chips with mini bars ──
+    let html = `<div class="stat-chip"><span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">total</span></div>`;
     state.statuses.forEach(s => {
-      if (counts[s.key] > 0) {
+      const cnt = counts[s.key] || 0;
+      if (cnt > 0) {
+        const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
         html += `<div class="stat-chip">
           <span class="stat-dot" style="background:${s.color}"></span>
-          <span style="font-weight:600">${counts[s.key]}</span>&nbsp;
-          <span style="color:var(--text2)">${s.label}</span>
+          <span style="font-weight:600">${cnt}</span>&nbsp;
+          <span style="color:var(--text2)">${esc(s.label)}</span>
+          <span class="stat-mini-bar"><span class="stat-mini-fill" style="width:${pct}%;background:${s.color}"></span></span>
+          <span style="color:var(--dim)">${pct}%</span>
         </div>`;
       }
     });
     document.getElementById('stats-bar').innerHTML = html;
+
+    renderTagLegend();
+  }
+
+  function renderTagLegend() {
+    const el = document.getElementById('tag-legend');
+    if (!el) return;
+    if (state.tags.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.innerHTML = '<span class="tag-legend-label">Tags</span>' +
+      state.tags.map(t =>
+        `<span class="tag-legend-item">
+          <span class="tag-dot" style="background:${t.color}"></span>
+          <span class="tag-legend-name">${esc(t.label)}</span>
+        </span>`
+      ).join('');
   }
 
   function renderGlance() {
@@ -874,7 +1239,8 @@
     let html = '';
 
     state.reels.forEach(reel => {
-      const scenes = state.scenes.filter(s => s.reel === reel);
+      const scenes  = state.scenes.filter(s => s.reel === reel);
+      const nextNum = getNextReelNumber(reel);
       html += `<div class="reel-col">
         <div class="reel-header">
           <span class="reel-name">${esc(reel)}</span>
@@ -883,26 +1249,28 @@
         <div class="reel-scenes">`;
 
       if (scenes.length === 0) {
-        html += `<div class="reel-empty">—</div>`;
+        html += `<div style="font-size:11px;color:var(--dim);padding:4px 2px;font-family:'Geist Mono',monospace">—</div>`;
       } else {
         scenes.forEach(sc => {
-          const display = sc.number || sc.name || '—';
-          const hasName = sc.name && sc.name !== sc.number;
-          const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
+          const num       = padSceneNum(sc.number) || sc.name || '—';
+          const hasName   = sc.name && sc.name !== sc.number;
+          const dotHtml   = (sc.tags || []).map(tagDot).filter(Boolean).join('');
           html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
             <div class="scene-card-top">
-              <span class="scene-card-number">${esc(display)}</span>
+              <div class="scene-card-main">
+                <span class="scene-card-number">${esc(num)}</span>
+                ${hasName ? `<span class="scene-card-name-inline">${esc(sc.name)}</span>` : ''}
+              </div>
               ${badge(sc.status, true, sc.id)}
             </div>
-            ${hasName ? `<div class="scene-card-name">${esc(sc.name)}</div>` : ''}
-            ${tagHtml ? `<div class="scene-card-footer">${tagHtml}</div>` : ''}
+            ${dotHtml ? `<div class="scene-card-footer">${dotHtml}</div>` : ''}
           </div>`;
         });
       }
 
       html += `</div>
         <div class="reel-quick-add">
-          <input class="reel-quick-input" placeholder="+ quick add…" data-reel="${esc(reel)}" onkeydown="handleQuickAdd(event)">
+          <input class="reel-quick-input" placeholder="${nextNum}" data-reel="${esc(reel)}" onkeydown="handleQuickAdd(event)">
         </div>
       </div>`;
     });
@@ -916,10 +1284,13 @@
           <span class="reel-count" style="color:#e86b6b">${unassigned.length}</span>
         </div><div class="reel-scenes">`;
       unassigned.forEach(sc => {
-        const display = sc.number || sc.name || '—';
+        const num = padSceneNum(sc.number) || sc.name || '—';
         html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
           <div class="scene-card-top">
-            <span class="scene-card-number">${esc(display)}</span>
+            <div class="scene-card-main">
+              <span class="scene-card-number">${esc(num)}</span>
+              ${sc.name ? `<span class="scene-card-name-inline">${esc(sc.name)}</span>` : ''}
+            </div>
             ${badge(sc.status, true, sc.id)}
           </div>
         </div>`;
@@ -945,10 +1316,12 @@
 
   function renderList() {
     const tbody = document.getElementById('list-body');
+    const tfoot = document.getElementById('list-tfoot');
 
     if (state.scenes.length === 0) {
       tbody.innerHTML = `<tr class="no-data-row"><td colspan="7">No scenes yet — click + Add Scene to begin</td></tr>`;
       renderSortHeaders();
+      if (tfoot) tfoot.innerHTML = renderListQARow();
       return;
     }
 
@@ -970,13 +1343,14 @@
 
     tbody.innerHTML = sorted.map(sc => {
       const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
+      const numDisplay  = padSceneNum(sc.number) || '—';
       return `<tr>
-        <td class="num-cell">${esc(sc.number || '—')}</td>
-        <td class="name-cell">${esc(sc.name || '—')}</td>
+        <td class="num-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','number')">${esc(numDisplay)}</td>
+        <td class="name-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','name')">${esc(sc.name || '—')}</td>
         <td><span class="reel-tag clickable" onclick="event.stopPropagation();openInlineReelPicker(event,this,'${sc.id}')">${esc(sc.reel || '—')}</span></td>
         <td>${badge(sc.status, true, sc.id)}</td>
-        <td class="tags-cell">${tagHtml || '<span style="color:var(--dim)">—</span>'}</td>
-        <td class="notes-cell" title="${esc(sc.notes)}">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
+        <td class="tags-cell cell-editable" onclick="openInlineTagPicker(event,this,'${sc.id}')">${tagHtml || '<span style="color:var(--dim)">—</span>'}</td>
+        <td class="notes-cell cell-editable" title="${esc(sc.notes)}" onclick="startInlineEditNotes(event,'${sc.id}')">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
         <td><div class="row-actions">
           <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -985,6 +1359,7 @@
       </tr>`;
     }).join('');
 
+    if (tfoot) tfoot.innerHTML = renderListQARow();
     renderSortHeaders();
   }
 
@@ -1018,19 +1393,26 @@
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Quick-add
+  // Quick-add (glance)
   // ────────────────────────────────────────────────────────────────────────────
 
   function handleQuickAdd(e) {
     const input = e.target;
     if (e.key === 'Escape') { input.value = ''; input.blur(); return; }
     if (e.key !== 'Enter') return;
-    const val = input.value.trim();
-    if (!val) return;
+    e.preventDefault();
+    const val  = input.value.trim();
     const reel = input.dataset.reel;
-    state.scenes.push({ id: uid(), number: val, name: '', reel, status: 'todo', notes: '', tags: [] });
+    const number = val ? padSceneNum(val) : getNextReelNumber(reel);
+    state.scenes.push({ id: uid(), number, name: '', reel, status: 'todo', notes: '', tags: [] });
     saveState();
+    input.value = '';
     renderGlance(); renderStats();
+    // Restore focus to same reel input
+    setTimeout(() => {
+      const inp = [...document.querySelectorAll('.reel-quick-input')].find(el => el.dataset.reel === reel);
+      if (inp) inp.focus();
+    }, 30);
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -1040,35 +1422,31 @@
   function openSceneModal(id) {
     Picker_close();
     const delBtn = document.getElementById('scene-delete-btn');
-
-    // Populate tags grid
     renderTagsGrid(id ? (state.scenes.find(s => s.id === id)?.tags || []) : []);
 
     if (id) {
       const sc = state.scenes.find(s => s.id === id);
       if (!sc) return;
       document.getElementById('scene-modal-title').textContent = 'Edit Scene';
-      document.getElementById('scene-id').value      = sc.id;
-      document.getElementById('scene-number').value  = sc.number || '';
-      document.getElementById('scene-name').value    = sc.name || '';
-      document.getElementById('scene-reel').value    = sc.reel || '';
-      document.getElementById('scene-status').value  = sc.status;
-      document.getElementById('scene-notes').value   = sc.notes || '';
-      // Update reel picker display
+      document.getElementById('scene-id').value     = sc.id;
+      document.getElementById('scene-number').value = padSceneNum(sc.number) || '';
+      document.getElementById('scene-name').value   = sc.name || '';
+      document.getElementById('scene-reel').value   = sc.reel || '';
+      document.getElementById('scene-status').value = sc.status;
+      document.getElementById('scene-notes').value  = sc.notes || '';
       document.getElementById('reel-cd-label').textContent = sc.reel || '—';
-      // Update status picker display
       const st = statusFor(sc.status);
       document.getElementById('status-cd-label').textContent = st.label;
       document.getElementById('status-cd-dot').style.background = st.color;
       delBtn.style.display = '';
     } else {
       document.getElementById('scene-modal-title').textContent = 'Add Scene';
-      document.getElementById('scene-id').value      = '';
-      document.getElementById('scene-number').value  = '';
-      document.getElementById('scene-name').value    = '';
-      document.getElementById('scene-reel').value    = state.reels[0] || '';
-      document.getElementById('scene-status').value  = 'todo';
-      document.getElementById('scene-notes').value   = '';
+      document.getElementById('scene-id').value     = '';
+      document.getElementById('scene-number').value = '';
+      document.getElementById('scene-name').value   = '';
+      document.getElementById('scene-reel').value   = state.reels[0] || '';
+      document.getElementById('scene-status').value = 'todo';
+      document.getElementById('scene-notes').value  = '';
       document.getElementById('reel-cd-label').textContent = state.reels[0] || '—';
       const st = statusFor('todo');
       document.getElementById('status-cd-label').textContent = st.label;
@@ -1105,7 +1483,7 @@
     const t = tagFor(tagId);
     if (!t) return;
     const sel = el.classList.contains('selected');
-    el.style.background = `${t.color}${sel ? '30' : '18'}`;
+    el.style.background  = `${t.color}${sel ? '30' : '18'}`;
     el.style.borderColor = `${t.color}${sel ? '66' : '33'}`;
   }
 
@@ -1119,7 +1497,7 @@
   }
 
   function saveScene() {
-    const number = document.getElementById('scene-number').value.trim();
+    const number = padSceneNum(document.getElementById('scene-number').value.trim());
     const name   = document.getElementById('scene-name').value.trim();
     if (!number && !name) {
       const inp = document.getElementById('scene-number');
@@ -1215,7 +1593,7 @@
     list.innerHTML = state.tags.map((t, i) => `
       <div class="settings-item">
         <span class="settings-item-dot" style="background:${t.color}" onclick="cycleTagColor(${i})"></span>
-        <input class="settings-item-input" value="${esc(t.label)}" oninput="state.tags[${i}].label=this.value;saveState()">
+        <input class="settings-item-input" value="${esc(t.label)}" oninput="state.tags[${i}].label=this.value;saveState();renderTagLegend()">
         <button class="btn btn-danger btn-icon btn-sm" onclick="removeTag(${i})">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
@@ -1230,6 +1608,7 @@
     saveState();
     document.getElementById('new-tag-input').value = '';
     renderTagMgr();
+    renderTagLegend();
   }
 
   function removeTag(i) {
@@ -1237,13 +1616,13 @@
     if (!confirm(`Remove tag "${state.tags[i].label}"? It will be removed from all scenes.`)) return;
     state.tags.splice(i, 1);
     state.scenes.forEach(sc => { sc.tags = (sc.tags || []).filter(id => id !== tagId); });
-    saveState(); renderTagMgr();
+    saveState(); renderTagMgr(); renderTagLegend();
   }
 
   function cycleTagColor(i) {
     const idx = TAG_PALETTE.indexOf(state.tags[i].color);
     state.tags[i].color = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length];
-    saveState(); renderTagMgr();
+    saveState(); renderTagMgr(); renderTagLegend();
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -1263,8 +1642,7 @@
       <div class="settings-item">
         <span class="settings-item-dot" style="background:${s.color}" onclick="cycleStatusColor(${i})"></span>
         <input class="settings-item-input" value="${esc(s.label)}"
-          oninput="state.statuses[${i}].label=this.value;saveState()"
-          ${s.builtin ? '' : ''}>
+          oninput="state.statuses[${i}].label=this.value;saveState()">
         <button class="btn btn-danger btn-icon btn-sm"
           onclick="removeCustomStatus(${i})"
           ${s.builtin ? 'style="opacity:0.3;pointer-events:none"' : ''}
@@ -1293,13 +1671,12 @@
     if (!confirm(`Remove status "${s.label}"?`)) return;
     const key = s.key;
     state.statuses.splice(i, 1);
-    // Reset scenes using this status to 'todo'
     state.scenes.forEach(sc => { if (sc.status === key) sc.status = 'todo'; });
     saveState(); renderStatusMgr();
   }
 
   function cycleStatusColor(i) {
-    const idx = TAG_PALETTE.indexOf(state.statuses[i].color);
+    const idx      = TAG_PALETTE.indexOf(state.statuses[i].color);
     const newColor = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length];
     state.statuses[i].color = newColor;
     state.statuses[i].bg    = newColor + '33';
@@ -1398,7 +1775,7 @@
 
     for (let i = 1; i < lines.length; i++) {
       const cells  = parseCSVLine(lines[i]);
-      const number = numIdx  >= 0 ? (cells[numIdx]?.trim()  || '') : '';
+      const number = numIdx  >= 0 ? padSceneNum(cells[numIdx]?.trim()  || '') : '';
       const name   = nameIdx >= 0 ? (cells[nameIdx]?.trim() || '') : '';
       if (!number && !name) continue;
 
