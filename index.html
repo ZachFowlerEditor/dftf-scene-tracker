@@ -280,10 +280,27 @@
       display: flex; align-items: center; gap: 5px; padding: 4px 10px;
       border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
       font-size: 10px; font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; white-space: nowrap;
+      cursor: pointer; transition: border-color 0.12s, background 0.12s; user-select: none;
     }
+    .stat-chip:hover { border-color: var(--border2); }
+    .stat-chip.chip-active { font-weight: 700; }
+    .stat-hint { font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; margin-left: 4px; opacity: 0.7; }
     .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .stat-mini-bar { width: 24px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
     .stat-mini-fill { height: 100%; border-radius: 2px; }
+
+    /* ── List view: checkboxes & selection bar ── */
+    .list-cb-th { width: 28px; padding: 0 4px !important; text-align: center; }
+    .list-cb-td { width: 28px; padding: 0 4px !important; text-align: center; vertical-align: middle; }
+    .list-cb { width: 13px; height: 13px; accent-color: var(--accent); cursor: pointer; }
+    .list-row-selected > td { background: rgba(255,224,102,0.05); }
+    .sel-bar {
+      display: none; align-items: center; gap: 8px; padding: 7px 12px; margin-bottom: 10px;
+      background: var(--surface); border: 1px solid var(--border2); border-radius: 6px;
+    }
+    .sel-bar.visible { display: flex; }
+    .sel-bar-count { font-size: 11px; font-family: 'Geist Mono', monospace; color: var(--text2); flex: 1; }
+    .sel-bar-count strong { color: var(--accent); }
 
     /* ── Tag legend ── */
     .tag-legend {
@@ -613,11 +630,18 @@
   <!-- Edit 1 Ready tracker -->
   <div id="edit1-tracker-slot"></div>
 
-  <!-- Stats bar -->
+  <!-- Stats bar (clickable for filtering) -->
   <div class="stats-bar" id="stats-bar"></div>
 
-  <!-- Filter bar -->
-  <div class="filter-bar" id="filter-bar"></div>
+  <!-- Selection action bar (list view) -->
+  <div class="sel-bar" id="sel-bar">
+    <span class="sel-bar-count"><strong id="sel-count">0</strong> scene<span id="sel-plural">s</span> selected</span>
+    <button class="btn btn-ghost btn-sm" onclick="groupSelectedScenes()">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="1" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="1" y="9" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="1.4"/></svg>
+      Group
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="clearSelection()" style="color:var(--dim)">Clear</button>
+  </div>
 
   <!-- Tag legend -->
   <div class="tag-legend" id="tag-legend" style="display:none"></div>
@@ -631,6 +655,7 @@
       <table class="list-table">
         <thead>
           <tr>
+            <th class="list-cb-th"><input type="checkbox" class="list-cb" id="cb-all" onchange="toggleSelectAll(this.checked)" title="Select all"></th>
             <th id="th-number" onclick="sortBy('number')"># <span class="sort-arrow" id="sa-number"></span></th>
             <th id="th-name"   onclick="sortBy('name')">Name <span class="sort-arrow" id="sa-name"></span></th>
             <th id="th-reel"   onclick="sortBy('reel')">Reel <span class="sort-arrow" id="sa-reel"></span></th>
@@ -921,6 +946,7 @@ let _currentProjectId   = null;
 let _currentProject     = null;
 let _activities         = [];
 let _filter             = 'all';
+let _selectedScenes     = new Set();
 let _activityOpen       = false;
 let _connState          = 'connecting';
 let _realtimeChannel    = null;
@@ -1363,9 +1389,9 @@ function renderActivityPanel() {
 // ── Filter ────────────────────────────────────────────────────────────────────
 
 function setFilter(key) {
-  _filter = key;
-  savePrefs({ filter: key });
-  renderFilter();
+  _filter = (_filter === key && key !== 'all') ? 'all' : key;  // toggle off
+  savePrefs({ filter: _filter });
+  renderStats();
   render();
 }
 
@@ -1780,7 +1806,6 @@ function openListQAStatusPicker(el) {
 
 function render() {
   renderStats();
-  renderFilter();
   if (state.view === 'glance') renderGlance();
   else renderList();
 }
@@ -1808,20 +1833,28 @@ function renderStats() {
     </div>`;
   }
 
-  let html = `<div class="stat-chip"><span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">total</span></div>`;
+  const allActive = !_filter || _filter === 'all';
+  let html = `<div class="stat-chip${allActive ? ' chip-active' : ''}" onclick="setFilter('all')"
+    style="${allActive ? 'border-color:var(--border2);' : ''}">
+    <span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">total</span>
+  </div>`;
   state.statuses.forEach(s => {
     const cnt = counts[s.key] || 0;
     if (cnt > 0) {
-      const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
-      html += `<div class="stat-chip">
+      const pct      = total > 0 ? Math.round((cnt / total) * 100) : 0;
+      const isActive = _filter === s.key;
+      html += `<div class="stat-chip${isActive ? ' chip-active' : ''}"
+        onclick="setFilter('${s.key}')"
+        style="${isActive ? `border-color:${s.color}55;background:${s.bg};color:${s.color};` : ''}">
         <span class="stat-dot" style="background:${s.color}"></span>
         <span style="font-weight:600">${cnt}</span>&nbsp;
-        <span style="color:var(--text2)">${esc(s.label)}</span>
+        <span style="color:${isActive ? 'inherit' : 'var(--text2)'};">${esc(s.label)}</span>
         <span class="stat-mini-bar"><span class="stat-mini-fill" style="width:${pct}%;background:${s.color}"></span></span>
-        <span style="color:var(--dim)">${pct}%</span>
+        <span style="color:${isActive ? 'inherit' : 'var(--dim)'};">${pct}%</span>
       </div>`;
     }
   });
+  html += `<span class="stat-hint">click to filter</span>`;
   document.getElementById('stats-bar').innerHTML = html;
   renderTagLegend();
 }
@@ -1937,7 +1970,7 @@ function renderList() {
   const scenes = filteredScenes();
 
   if (scenes.length === 0) {
-    tbody.innerHTML = `<tr class="no-data-row"><td colspan="7">${state.scenes.length > 0 ? 'No scenes match the current filter' : 'No scenes yet — click + Add Scene to begin'}</td></tr>`;
+    tbody.innerHTML = `<tr class="no-data-row"><td colspan="8">${state.scenes.length > 0 ? 'No scenes match the current filter' : 'No scenes yet — click + Add Scene to begin'}</td></tr>`;
     renderSortHeaders();
     if (tfoot) tfoot.innerHTML = renderListQARow();
     return;
@@ -1956,12 +1989,19 @@ function renderList() {
     return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
   });
 
+  const cbAllEl = document.getElementById('cb-all');
+  if (cbAllEl) cbAllEl.checked = false;
+
   tbody.innerHTML = sorted.map(sc => {
     const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
     const num = padSceneNum(sc.number) || '—';
     const gc  = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : null;
     const groupStyle = gc ? `border-left: 3px solid ${gc};` : '';
-    return `<tr style="${groupStyle}">
+    const isSel = _selectedScenes.has(sc.id);
+    return `<tr style="${groupStyle}" class="${isSel ? 'list-row-selected' : ''}">
+      <td class="list-cb-td" onclick="event.stopPropagation()">
+        <input type="checkbox" class="list-cb" ${isSel ? 'checked' : ''} onchange="toggleSelectScene('${sc.id}',this.checked)">
+      </td>
       <td class="num-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','number')">${esc(num)}</td>
       <td class="name-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','name')">${esc(sc.name || '—')}</td>
       <td><span class="reel-tag clickable" onclick="event.stopPropagation();openInlineReelPicker(event,this,'${sc.id}')">${esc(sc.reel || '—')}</span></td>
@@ -1998,6 +2038,7 @@ function setView(v, save = true) {
   document.getElementById('view-list').style.display   = v === 'list'   ? '' : 'none';
   document.getElementById('btn-glance').classList.toggle('active', v === 'glance');
   document.getElementById('btn-list').classList.toggle('active',   v === 'list');
+  if (v !== 'list') { _selectedScenes.clear(); renderSelBar(); }
   if (save) savePrefs({ view: v });
   render();
 }
@@ -2007,6 +2048,103 @@ function sortBy(col) {
   else state.sort = { col, dir: 1 };
   savePrefs({ sort: state.sort });
   renderList();
+}
+
+// ── Selection (list view) ─────────────────────────────────────────────────────
+
+function toggleSelectScene(id, checked) {
+  if (checked) _selectedScenes.add(id);
+  else         _selectedScenes.delete(id);
+  renderSelBar();
+  const row = document.querySelector(`input.list-cb[onchange*="'${id}'"]`)?.closest('tr');
+  if (row) row.classList.toggle('list-row-selected', checked);
+  const cbAll = document.getElementById('cb-all');
+  if (cbAll) {
+    const visible = [...document.querySelectorAll('.list-cb:not(#cb-all)')];
+    cbAll.checked = visible.length > 0 && visible.every(cb => cb.checked);
+  }
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.list-cb:not(#cb-all)').forEach(cb => {
+    const id = cb.getAttribute('onchange').match(/'([^']+)'/)?.[1];
+    if (!id) return;
+    cb.checked = checked;
+    if (checked) _selectedScenes.add(id);
+    else         _selectedScenes.delete(id);
+    cb.closest('tr')?.classList.toggle('list-row-selected', checked);
+  });
+  renderSelBar();
+}
+
+function clearSelection() {
+  _selectedScenes.clear();
+  document.querySelectorAll('.list-cb').forEach(cb => { cb.checked = false; });
+  document.querySelectorAll('.list-row-selected').forEach(r => r.classList.remove('list-row-selected'));
+  renderSelBar();
+}
+
+function renderSelBar() {
+  const bar  = document.getElementById('sel-bar');
+  const cnt  = document.getElementById('sel-count');
+  const plur = document.getElementById('sel-plural');
+  if (!bar) return;
+  const n = _selectedScenes.size;
+  if (cnt)  cnt.textContent  = n;
+  if (plur) plur.textContent = n === 1 ? '' : 's';
+  bar.classList.toggle('visible', n > 0);
+}
+
+function groupSelectedScenes() {
+  if (_selectedScenes.size === 0) return;
+  // Auto-generate next group name
+  const existing = new Set(state.scenes.map(s => s.group_id).filter(Boolean));
+  let n = 1;
+  while (existing.has(`Group ${n}`)) n++;
+  const defaultName = `Group ${n}`;
+
+  // Inline prompt via a tiny floating modal
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;min-width:280px;max-width:340px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text);">Name this group</div>
+    <input id="group-name-inp" value="${esc(defaultName)}"
+      style="padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:'Geist',system-ui,sans-serif;outline:none;width:100%;box-sizing:border-box;"
+      placeholder="${esc(defaultName)}" autofocus>
+    <div style="font-size:10px;color:var(--dim);font-family:'Geist Mono',monospace;">Leave blank for no group name</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm" onclick="this.closest('[style]').remove()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="applyGroupFromModal()">Apply</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const inp = overlay.querySelector('#group-name-inp');
+  if (inp) { inp.focus(); inp.select(); }
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); applyGroupFromModal(); }
+    if (e.key === 'Escape') overlay.remove();
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function applyGroupFromModal() {
+  const inp = document.getElementById('group-name-inp');
+  const raw = inp ? inp.value.trim() : '';
+  const existing = new Set(state.scenes.map(s => s.group_id).filter(Boolean));
+  let n = 1;
+  while (existing.has(`Group ${n}`)) n++;
+  const groupId = raw || `Group ${n}`;
+  const groupColor = groupColorFor(groupId);
+  _selectedScenes.forEach(id => {
+    const sc = state.scenes.find(s => s.id === id);
+    if (!sc) return;
+    sc.group_id    = groupId;
+    sc.group_color = groupColor;
+    upsertScene(sc);
+  });
+  document.querySelector('[style*="position:fixed"][style*="z-index:2000"]')?.remove();
+  clearSelection();
+  render();
 }
 
 // ── Quick-add (glance) ────────────────────────────────────────────────────────
