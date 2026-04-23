@@ -310,6 +310,8 @@
     .group-header-row .gh-label { display: flex; align-items: center; gap: 6px; }
     .group-header-row .gh-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
     .group-header-row .gh-count { font-weight: 400; color: var(--dim); }
+    .group-header-row .gh-edit { opacity: 0; font-size: 9px; color: var(--dim); margin-left: 4px; font-family: 'Geist Mono', monospace; letter-spacing: 0.05em; transition: opacity 0.1s; }
+    .group-header-row:hover .gh-edit { opacity: 1; }
     .group-divider-row > td { padding: 0 !important; height: 12px; border-bottom: none !important; }
 
     /* ── Glance group labels ── */
@@ -317,7 +319,9 @@
       display: flex; align-items: center; gap: 4px; padding: 5px 2px 2px;
       font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
       font-family: 'Geist Mono', monospace; color: var(--dim); user-select: none;
+      cursor: pointer; transition: opacity 0.12s;
     }
+    .reel-group-hdr:hover { opacity: 0.65; }
     .reel-group-hdr:first-child { padding-top: 2px; }
     .reel-group-sw { width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0; }
     .reel-group-div { border: none; border-top: 1px solid var(--border); margin: 3px 0 5px; opacity: 0.6; }
@@ -1953,7 +1957,7 @@ function renderGlance() {
       // Render groups
       [...reelGroupMap.entries()].sort(([a],[b]) => a.localeCompare(b)).forEach(([groupId, gScenes]) => {
         const gc = gScenes[0].group_color || groupColorFor(groupId);
-        html += `<div class="reel-group-hdr">
+        html += `<div class="reel-group-hdr" onclick="editGroup('${esc(groupId)}')">
           <span class="reel-group-sw" style="background:${gc}"></span>${esc(groupId)}
         </div>`;
         sortByNum(gScenes).forEach(sc => { html += scCard(sc); });
@@ -2086,12 +2090,13 @@ function renderList() {
     const gc = groupScenes[0].group_color || groupColorFor(groupId);
     const sorted = sortScenes(groupScenes);
     // Header row
-    html += `<tr class="group-header-row" style="border-left: 3px solid ${gc};">
+    html += `<tr class="group-header-row" style="border-left: 3px solid ${gc};" onclick="editGroup('${esc(groupId)}')">
       <td class="list-cb-td"></td>
       <td colspan="7"><div class="gh-label">
         <span class="gh-swatch" style="background:${gc}"></span>
         ${esc(groupId)}
         <span class="gh-count">&nbsp;·&nbsp;${sorted.length}</span>
+        <span class="gh-edit">edit</span>
       </div></td>
     </tr>`;
     sorted.forEach(sc => { html += sceneRow(sc); });
@@ -2218,6 +2223,64 @@ function groupSelectedScenes() {
 
 function closeGroupOverlay() {
   if (_groupOverlay) { _groupOverlay.remove(); _groupOverlay = null; }
+}
+
+function editGroup(groupId) {
+  _groupOverlay = document.createElement('div');
+  _groupOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  const gc = groupColorFor(groupId);
+  _groupOverlay.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;min-width:280px;max-width:340px;display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="width:10px;height:10px;border-radius:2px;background:${gc};flex-shrink:0;display:inline-block;"></span>
+      <span style="font-size:13px;font-weight:600;color:var(--text);">Rename group</span>
+    </div>
+    <input id="group-edit-inp" value="${esc(groupId)}"
+      style="padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:'Geist',system-ui,sans-serif;outline:none;width:100%;box-sizing:border-box;"
+      data-old="${esc(groupId)}">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm" style="color:#e86b6b;margin-right:auto" onclick="removeGroup('${esc(groupId)}')">Ungroup</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeGroupOverlay()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="applyGroupEdit()">Rename</button>
+    </div>
+  </div>`;
+  document.body.appendChild(_groupOverlay);
+  const inp = _groupOverlay.querySelector('#group-edit-inp');
+  if (inp) { inp.focus(); inp.select(); }
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); applyGroupEdit(); }
+    if (e.key === 'Escape') closeGroupOverlay();
+  });
+  _groupOverlay.addEventListener('click', e => { if (e.target === _groupOverlay) closeGroupOverlay(); });
+}
+
+function applyGroupEdit() {
+  const inp = document.getElementById('group-edit-inp');
+  if (!inp) return;
+  const oldId  = inp.dataset.old;
+  const newId  = inp.value.trim() || oldId;
+  if (newId === oldId) { closeGroupOverlay(); return; }
+  const newColor = groupColorFor(newId);
+  state.scenes.forEach(sc => {
+    if (sc.group_id === oldId) {
+      sc.group_id    = newId;
+      sc.group_color = newColor;
+      upsertScene(sc);
+    }
+  });
+  closeGroupOverlay();
+  render();
+}
+
+function removeGroup(groupId) {
+  state.scenes.forEach(sc => {
+    if (sc.group_id === groupId) {
+      sc.group_id    = '';
+      sc.group_color = '';
+      upsertScene(sc);
+    }
+  });
+  closeGroupOverlay();
+  render();
 }
 
 function applyGroupFromModal() {
