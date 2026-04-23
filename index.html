@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SceneTracker — dftf.io</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -33,9 +34,187 @@
       background-size: 256px 256px;
     }
 
+    /* ── Full-screen overlay screens ── */
+    .screen {
+      position: fixed; inset: 0; z-index: 3000; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .screen.hidden { display: none; }
+
+    /* ── Hub Screen ── */
+    .hub-box {
+      width: 100%; max-width: 420px;
+    }
+    .hub-logo {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(255,224,102,0.4); font-family: 'Geist Mono', monospace; margin-bottom: 6px;
+    }
+    .hub-title {
+      font-size: clamp(2rem,6vw,3.2rem); font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; line-height: 1; margin-bottom: 36px;
+    }
+    .hub-section { margin-bottom: 28px; }
+    .hub-section-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--dim); font-family: 'Geist Mono', monospace; margin-bottom: 10px;
+    }
+    .hub-input-row { display: flex; gap: 8px; }
+    .hub-input {
+      flex: 1; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-family: inherit; font-size: 14px;
+      outline: none; transition: border-color 0.15s;
+    }
+    .hub-input:focus { border-color: var(--accent); }
+    .hub-input::placeholder { color: var(--dim); }
+    .hub-divider {
+      display: flex; align-items: center; gap: 12px; color: var(--dim);
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      font-family: 'Geist Mono', monospace; margin: 20px 0;
+    }
+    .hub-divider::before, .hub-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .hub-recent-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 14px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer; transition: all 0.15s; margin-bottom: 6px;
+    }
+    .hub-recent-item:hover { border-color: var(--border2); background: var(--surface2); }
+    .hub-recent-name { font-size: 13px; font-weight: 600; }
+    .hub-recent-id { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; }
+    .hub-recent-arrow { color: var(--dim); font-size: 14px; flex-shrink: 0; }
+    .hub-error { font-size: 11px; color: #e86b6b; margin-top: 6px; min-height: 16px; }
+
+    /* ── Auth Screen ── */
+    .auth-box {
+      background: var(--surface); border: 1px solid var(--border2); border-radius: 12px;
+      padding: 40px 36px; width: 100%; max-width: 340px; text-align: center;
+    }
+    .auth-logo { font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; margin-bottom: 6px; }
+    .auth-project { font-size: 22px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .auth-hint { font-size: 11px; color: var(--dim); margin-bottom: 24px; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; }
+    .auth-input {
+      width: 100%; padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); font-family: inherit; font-size: 14px; text-align: center;
+      outline: none; transition: border-color 0.15s; margin-bottom: 12px; letter-spacing: 0.1em;
+    }
+    .auth-input:focus { border-color: var(--accent); }
+    .auth-input.error { border-color: #e86b6b; animation: shake 0.3s; }
+    .auth-submit {
+      width: 100%; padding: 11px; background: var(--accent); color: #0c0c0e; border: none;
+      border-radius: 7px; font-family: inherit; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
+    }
+    .auth-submit:hover { background: #ffd700; }
+    .auth-error { font-size: 11px; color: #e86b6b; margin-top: 8px; min-height: 16px; }
+    .auth-back { font-size: 11px; color: var(--dim); margin-top: 16px; cursor: pointer; transition: color 0.15s; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; }
+    .auth-back:hover { color: var(--text2); }
+
+    /* ── Loading Screen ── */
+    .loading-box { text-align: center; }
+    .loading-spinner {
+      width: 32px; height: 32px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.7s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 11px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; }
+
+    /* ── Setup Screen ── */
+    .setup-box { width: 100%; max-width: 560px; }
+    .setup-title { font-size: 20px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .setup-sub { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+    .setup-sql {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; font-family: 'Geist Mono', monospace; font-size: 11px;
+      color: var(--text2); line-height: 1.6; max-height: 300px; overflow-y: auto;
+      white-space: pre; margin-bottom: 16px;
+    }
+    .setup-sql::-webkit-scrollbar { width: 3px; }
+    .setup-sql::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* ── Connection badge ── */
+    .conn-badge {
+      display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+      border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; font-family: 'Geist Mono', monospace;
+      border: 1px solid transparent; transition: all 0.3s;
+    }
+    .conn-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .conn-badge.live   { color: #6dbf6d; border-color: rgba(109,191,109,0.25); background: rgba(109,191,109,0.08); }
+    .conn-badge.live .conn-dot { background: #6dbf6d; box-shadow: 0 0 4px #6dbf6d; }
+    .conn-badge.connecting { color: #e8b84b; border-color: rgba(232,184,75,0.25); background: rgba(232,184,75,0.08); }
+    .conn-badge.connecting .conn-dot { background: #e8b84b; animation: pulse 1s ease-in-out infinite; }
+    .conn-badge.offline { color: #e86b6b; border-color: rgba(232,107,107,0.25); background: rgba(232,107,107,0.08); }
+    .conn-badge.offline .conn-dot { background: #e86b6b; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Activity Panel ── */
+    .activity-panel {
+      position: fixed; top: 0; right: -360px; width: 360px; height: 100vh;
+      z-index: 500; background: var(--surface); border-left: 1px solid var(--border2);
+      display: flex; flex-direction: column;
+      transition: right 0.25s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+    }
+    .activity-panel.open { right: 0; }
+    .activity-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; border-bottom: 1px solid var(--border);
+      background: var(--surface2); flex-shrink: 0;
+    }
+    .activity-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--dim); font-family: 'Geist Mono', monospace;
+    }
+    .activity-close {
+      background: none; border: none; color: var(--dim); cursor: pointer;
+      font-size: 18px; line-height: 1; padding: 2px 4px; transition: color 0.15s;
+    }
+    .activity-close:hover { color: var(--text); }
+    .activity-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+    .activity-list::-webkit-scrollbar { width: 3px; }
+    .activity-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .activity-entry {
+      padding: 10px 18px; border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .activity-entry:last-child { border-bottom: none; }
+    .activity-entry:hover { background: var(--surface2); }
+    .activity-scene-line {
+      display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px;
+    }
+    .activity-num {
+      font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.04em; flex-shrink: 0;
+    }
+    .activity-name { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .activity-change {
+      display: flex; align-items: center; gap: 5px; font-size: 11px; margin-bottom: 3px;
+      flex-wrap: wrap;
+    }
+    .activity-from { color: var(--text2); }
+    .activity-arrow { color: var(--dim); }
+    .activity-to { font-weight: 600; }
+    .activity-time { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; }
+    .activity-empty { padding: 40px 18px; text-align: center; font-size: 12px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; }
+
+    /* ── Filter bar ── */
+    .filter-bar { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+    .filter-btn {
+      display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px;
+      border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text2); font-family: 'Geist Mono', monospace; font-size: 10px;
+      letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+    .filter-btn.active { font-weight: 700; color: var(--text); border-color: var(--border2); }
+    .filter-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .filter-count { opacity: 0.6; }
+
+    /* ── Page layout ── */
     .page-wrap { position: relative; z-index: 1; max-width: 1600px; margin: 0 auto; padding: 28px 24px 80px; }
 
-    /* ── Back ── */
     .site-back {
       display: inline-block; font-size: 10px; letter-spacing: 0.4em;
       color: rgba(255,224,102,0.35); text-transform: uppercase; text-decoration: none;
@@ -43,13 +222,14 @@
     }
     .site-back:hover { color: var(--accent); }
 
-    /* ── Page header ── */
     .page-header {
       display: flex; align-items: flex-end; justify-content: space-between;
       gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
     }
+    .page-title-area {}
     .page-title { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; line-height: 1; margin-bottom: 4px; }
-    .page-subtitle { font-size: 10px; letter-spacing: 0.4em; color: var(--dim); text-transform: uppercase; font-family: 'Geist Mono', monospace; }
+    .page-title-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .page-project-name { font-size: 11px; color: var(--text2); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; }
     .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
     /* ── Buttons ── */
@@ -68,6 +248,7 @@
     .btn-danger:hover { background: rgba(232,107,107,0.1); border-color: #e86b6b; }
     .btn-sm { padding: 6px 12px; font-size: 11px; }
     .btn-icon { padding: 5px 7px; }
+    .btn-active { background: var(--surface2) !important; border-color: var(--border2) !important; color: var(--accent) !important; }
 
     /* ── View toggle ── */
     .view-toggle { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
@@ -85,27 +266,13 @@
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
       padding: 14px 18px; margin-bottom: 10px;
     }
-    .edit1-top {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px;
-    }
-    .edit1-label {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
-      color: var(--dim); font-family: 'Geist Mono', monospace;
-    }
+    .edit1-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+    .edit1-label { font-size: 9px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; }
     .edit1-right { display: flex; align-items: baseline; gap: 10px; }
-    .edit1-pct {
-      font-size: 24px; font-weight: 700; font-family: 'Geist Mono', monospace;
-      line-height: 1;
-    }
-    .edit1-count {
-      font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;
-    }
-    .edit1-bar-wrap {
-      height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;
-    }
-    .edit1-bar-fill {
-      height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-    }
+    .edit1-pct { font-size: 24px; font-weight: 700; font-family: 'Geist Mono', monospace; line-height: 1; }
+    .edit1-count { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; }
+    .edit1-bar-wrap { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+    .edit1-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
 
     /* ── Stats bar ── */
     .stats-bar { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
@@ -115,9 +282,7 @@
       font-size: 10px; font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; white-space: nowrap;
     }
     .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .stat-mini-bar {
-      width: 24px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; flex-shrink: 0;
-    }
+    .stat-mini-bar { width: 24px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
     .stat-mini-fill { height: 100%; border-radius: 2px; }
 
     /* ── Tag legend ── */
@@ -126,47 +291,26 @@
       margin-bottom: 16px; padding: 7px 12px;
       background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
     }
-    .tag-legend-label {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--dim); font-family: 'Geist Mono', monospace; flex-shrink: 0;
-    }
+    .tag-legend-label { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; flex-shrink: 0; }
     .tag-legend-item { display: flex; align-items: center; gap: 5px; cursor: default; }
     .tag-legend-name { font-size: 10px; color: var(--text2); font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; }
 
     /* ── Badge ── */
-    .badge {
-      display: inline-block; padding: 2px 8px; border-radius: 3px;
-      font-size: 10px; font-family: 'Geist Mono', monospace; font-weight: 500;
-      letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0;
-    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-family: 'Geist Mono', monospace; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0; }
     .badge.clickable { cursor: pointer; transition: opacity 0.15s; }
     .badge.clickable:hover { opacity: 0.75; }
 
-    /* ── Tag chips (list view) ── */
-    .tag-chip {
-      display: inline-block; padding: 1px 7px; border-radius: 20px;
-      font-size: 9px; font-family: 'Geist Mono', monospace; font-weight: 500;
-      letter-spacing: 0.06em; white-space: nowrap; border: 1px solid transparent;
-    }
-
-    /* ── Tag dot (at-a-glance) ── */
-    .tag-dot {
-      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-      flex-shrink: 0; cursor: default;
-    }
+    /* ── Tag chips / dots ── */
+    .tag-chip { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 9px; font-family: 'Geist Mono', monospace; font-weight: 500; letter-spacing: 0.06em; white-space: nowrap; border: 1px solid transparent; }
+    .tag-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; cursor: default; }
 
     /* ── AT-A-GLANCE ── */
-    .glance-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
-    }
+    .glance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 800px) { .glance-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 520px) { .glance-grid { grid-template-columns: 1fr; } }
 
     .reel-col { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .reel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface2);
-    }
+    .reel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface2); }
     .reel-name { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text); font-family: 'Geist Mono', monospace; }
     .reel-count { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; }
     .reel-scenes { padding: 7px; display: flex; flex-direction: column; gap: 5px; min-height: 44px; }
@@ -175,29 +319,14 @@
     .scene-card {
       padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--bg); cursor: pointer; transition: all 0.12s;
+      border-left-width: 3px;
     }
     .scene-card:hover { border-color: var(--border2); background: var(--surface2); }
-    .scene-card-top {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
-    }
-    .scene-card-main {
-      display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow: hidden;
-    }
-    /* Name is the hero — shown on top, large */
-    .scene-card-name-hero {
-      font-size: 13px; font-weight: 600; color: var(--text);
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3;
-    }
-    /* Number is secondary — small mono label below the name */
-    .scene-card-number {
-      font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace;
-      letter-spacing: 0.08em; line-height: 1.2;
-    }
-    /* When there's no name, number takes the hero role */
-    .scene-card-number.hero {
-      font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.06em;
-      font-family: 'Geist Mono', monospace;
-    }
+    .scene-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .scene-card-main { display: flex; flex-direction: row; align-items: baseline; gap: 5px; flex: 1; min-width: 0; overflow: hidden; }
+    .scene-card-name-hero { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+    .scene-card-number { font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; line-height: 1.2; white-space: nowrap; flex-shrink: 0; }
+    .scene-card-number.hero { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.06em; font-family: 'Geist Mono', monospace; }
     .scene-card-footer { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 5px; min-height: 9px; }
 
     /* Quick-add (glance) */
@@ -220,12 +349,7 @@
     /* ── LIST VIEW ── */
     .list-table-wrap { overflow-x: auto; }
     .list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .list-table th {
-      padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 600;
-      letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
-      border-bottom: 1px solid var(--border); white-space: nowrap;
-      font-family: 'Geist Mono', monospace; user-select: none; cursor: pointer;
-    }
+    .list-table th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); white-space: nowrap; font-family: 'Geist Mono', monospace; user-select: none; cursor: pointer; }
     .list-table th:last-child { cursor: default; }
     .list-table th:hover:not(:last-child) { color: var(--text2); }
     .list-table th.sorted { color: var(--accent); }
@@ -235,54 +359,32 @@
     .list-table tbody tr:last-child td { border-bottom: none; }
     .num-cell { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; white-space: nowrap; }
     .name-cell { font-weight: 500; }
-    .reel-tag {
-      display: inline-block; padding: 2px 8px; border-radius: 3px;
-      background: var(--surface2); border: 1px solid var(--border);
-      font-size: 11px; font-family: 'Geist Mono', monospace; color: var(--text2);
-    }
+    .reel-tag { display: inline-block; padding: 2px 8px; border-radius: 3px; background: var(--surface2); border: 1px solid var(--border); font-size: 11px; font-family: 'Geist Mono', monospace; color: var(--text2); }
     .reel-tag.clickable { cursor: pointer; transition: all 0.12s; }
     .reel-tag.clickable:hover { border-color: var(--border2); color: var(--text); }
     .tags-cell { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; min-height: 22px; }
     .notes-cell { max-width: 200px; font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
     .no-data-row td { text-align: center; padding: 52px 14px; color: var(--dim); font-size: 12px; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; border-bottom: none; }
+    /* Group stripe in list */
+    .group-stripe { width: 4px; border-radius: 2px; min-height: 16px; flex-shrink: 0; }
 
-    /* Editable cells in list view */
+    /* Editable cells */
     .cell-editable { cursor: pointer; }
     .cell-editable:hover { background: var(--surface3) !important; }
-    .inline-edit-input {
-      background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px;
-      color: var(--text); font-family: inherit; font-size: 13px; padding: 3px 7px;
-      outline: none; width: 100%; min-width: 60px;
-    }
+    .inline-edit-input { background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px; color: var(--text); font-family: inherit; font-size: 13px; padding: 3px 7px; outline: none; width: 100%; min-width: 60px; }
     .inline-edit-input.mono { font-family: 'Geist Mono', monospace; font-size: 12px; }
-    .inline-edit-textarea {
-      background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px;
-      color: var(--text); font-family: inherit; font-size: 12px; padding: 4px 7px;
-      outline: none; width: 100%; resize: none; min-height: 48px; display: block;
-    }
+    .inline-edit-textarea { background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px; color: var(--text); font-family: inherit; font-size: 12px; padding: 4px 7px; outline: none; width: 100%; resize: none; min-height: 48px; display: block; }
 
     /* List quick-add row */
-    .list-qa-row td {
-      border-top: 2px solid var(--border2); border-bottom: none;
-      background: var(--surface2); padding: 7px 14px;
-    }
-    .list-qa-input {
-      background: transparent; border: none;
-      border-bottom: 1px dashed rgba(255,255,255,0.12);
-      color: var(--text); font-family: inherit; font-size: 12px;
-      padding: 2px 0; outline: none; width: 100%;
-    }
+    .list-qa-row td { border-top: 2px solid var(--border2); border-bottom: none; background: var(--surface2); padding: 7px 14px; }
+    .list-qa-input { background: transparent; border: none; border-bottom: 1px dashed rgba(255,255,255,0.12); color: var(--text); font-family: inherit; font-size: 12px; padding: 2px 0; outline: none; width: 100%; }
     .list-qa-input.mono { font-family: 'Geist Mono', monospace; }
     .list-qa-input::placeholder { color: var(--dim); }
     .list-qa-input:focus { border-bottom-color: var(--accent); }
 
     /* ── Custom Dropdown (Picker) ── */
-    .cd-trigger {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; cursor: pointer; transition: all 0.15s; user-select: none;
-    }
+    .cd-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.15s; user-select: none; }
     .cd-trigger:hover { border-color: var(--border2); }
     .cd-trigger.open { border-color: var(--accent); }
     .cd-sel { display: flex; align-items: center; gap: 8px; }
@@ -291,18 +393,9 @@
     .cd-caret { transition: transform 0.15s; color: var(--dim); flex-shrink: 0; }
     .cd-trigger.open .cd-caret { transform: rotate(180deg); }
 
-    .cd-panel {
-      position: fixed; z-index: 2000;
-      background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
-      box-shadow: 0 8px 36px rgba(0,0,0,0.55); overflow: hidden;
-      animation: cdIn 0.12s ease;
-      min-width: 180px; max-height: 320px; overflow-y: auto;
-    }
+    .cd-panel { position: fixed; z-index: 2000; background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; box-shadow: 0 8px 36px rgba(0,0,0,0.55); overflow: hidden; animation: cdIn 0.12s ease; min-width: 180px; max-height: 320px; overflow-y: auto; }
     @keyframes cdIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
-    .cd-option {
-      display: flex; align-items: center; gap: 10px; padding: 9px 14px;
-      cursor: pointer; transition: background 0.1s;
-    }
+    .cd-option { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background 0.1s; }
     .cd-option:hover { background: var(--surface2); }
     .cd-option.active { background: var(--surface2); }
     .cd-option-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -315,81 +408,45 @@
     .cd-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
     /* Tag multi-select in modal */
-    .tag-select-grid {
-      display: flex; flex-wrap: wrap; gap: 6px; padding: 10px;
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-      min-height: 44px;
-    }
-    .tag-toggle {
-      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
-      border-radius: 20px; font-size: 11px; font-family: 'Geist Mono', monospace;
-      font-weight: 500; cursor: pointer; transition: all 0.12s;
-      border: 1px solid transparent; opacity: 0.5;
-    }
+    .tag-select-grid { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; min-height: 44px; }
+    .tag-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-family: 'Geist Mono', monospace; font-weight: 500; cursor: pointer; transition: all 0.12s; border: 1px solid transparent; opacity: 0.5; }
     .tag-toggle.selected { opacity: 1; }
     .tag-toggle-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .tag-empty { font-size: 11px; color: var(--dim); }
 
     /* Color palette */
     .color-palette { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .color-swatch {
-      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
-      border: 2px solid transparent; transition: all 0.12s;
-    }
+    .color-swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.12s; }
     .color-swatch:hover { transform: scale(1.15); }
     .color-swatch.selected { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,0.3); }
 
     /* ── Modals ── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(4px);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.hidden { display: none; }
-    .modal {
-      background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
-      width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
-    }
+    .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
     .modal-wide { max-width: 540px; }
-    .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px 13px; border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; background: var(--surface); z-index: 1;
-    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 13px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; }
     .modal-title { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
     .modal-close { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 4px; transition: color 0.15s; }
     .modal-close:hover { color: var(--text); }
     .modal-body { padding: 18px 20px; }
-    .modal-footer {
-      display: flex; justify-content: flex-end; gap: 8px; padding: 13px 20px;
-      border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--surface);
-    }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 13px 20px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--surface); }
 
     /* ── Forms ── */
     .form-group { margin-bottom: 15px; }
     .form-group:last-child { margin-bottom: 0; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; font-family: 'Geist Mono', monospace; }
-    .form-input, .form-textarea {
-      width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px;
-      transition: border-color 0.15s; outline: none;
-    }
+    .form-input, .form-textarea { width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; transition: border-color 0.15s; outline: none; }
     .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
     .form-input::placeholder, .form-textarea::placeholder { color: var(--dim); }
     .form-textarea { resize: vertical; min-height: 72px; }
 
     /* ── Settings list items ── */
     .settings-list { display: flex; flex-direction: column; gap: 6px; }
-    .settings-item {
-      display: flex; align-items: center; gap: 8px; padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
+    .settings-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .settings-item:last-child { border-bottom: none; }
-    .settings-item-input {
-      flex: 1; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 5px; color: var(--text); font-family: inherit; font-size: 13px; font-weight: 500;
-      outline: none; transition: border-color 0.15s;
-    }
+    .settings-item-input { flex: 1; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: inherit; font-size: 13px; font-weight: 500; outline: none; transition: border-color 0.15s; }
     .settings-item-input:focus { border-color: var(--accent); }
     .settings-item-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.12s; }
     .settings-item-dot:hover { transform: scale(1.2); }
@@ -404,27 +461,11 @@
     .import-preview::-webkit-scrollbar { width: 3px; }
     .import-preview::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-    /* ── Password screen ── */
-    .pwd-screen { position: fixed; inset: 0; z-index: 2000; background: var(--bg); display: flex; align-items: center; justify-content: center; }
-    .pwd-screen.hidden { display: none; }
-    .pwd-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 40px 36px; width: 100%; max-width: 340px; text-align: center; }
-    .pwd-logo { font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; margin-bottom: 6px; }
-    .pwd-title { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 28px; }
-    .pwd-input { width: 100%; padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-family: inherit; font-size: 14px; text-align: center; outline: none; transition: border-color 0.15s; margin-bottom: 12px; letter-spacing: 0.1em; }
-    .pwd-input:focus { border-color: var(--accent); }
-    .pwd-input.error { border-color: #e86b6b; animation: shake 0.3s; }
-    .pwd-error { font-size: 11px; color: #e86b6b; margin-top: 8px; min-height: 16px; }
-    .pwd-submit { width: 100%; padding: 11px; background: var(--accent); color: #0c0c0e; border: none; border-radius: 7px; font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s; }
-    .pwd-submit:hover { background: #ffd700; }
-
     @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-
-    /* ── Toast ── */
     @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border2); color: var(--text); padding: 9px 18px; border-radius: 8px; font-size: 12px; z-index: 9999; white-space: nowrap; animation: toastIn 0.2s ease; pointer-events: none; }
     .toast.error { border-color: rgba(232,107,107,0.4); color: #e86b6b; }
 
-    /* Scrollbar */
     .modal::-webkit-scrollbar { width: 4px; }
     .modal::-webkit-scrollbar-track { background: transparent; }
     .modal::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
@@ -432,1497 +473,1968 @@
 </head>
 <body>
 
-  <!-- Password Screen -->
-  <div class="pwd-screen hidden" id="pwd-screen">
-    <div class="pwd-box">
-      <div class="pwd-logo">dftf.io</div>
-      <div class="pwd-title">Scene Tracker</div>
-      <input type="password" class="pwd-input" id="pwd-input" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
-      <button class="pwd-submit" onclick="tryLogin()">Enter</button>
-      <div class="pwd-error" id="pwd-error"></div>
+<!-- ── Hub Screen ── -->
+<div class="screen" id="hub-screen">
+  <div class="hub-box">
+    <div class="hub-logo">dftf.io</div>
+    <div class="hub-title">Scene Tracker</div>
+
+    <div class="hub-section">
+      <div class="hub-section-label">Create New Project</div>
+      <div class="hub-input-row">
+        <input class="hub-input" type="text" id="hub-project-name" placeholder="Project name…" autocomplete="off" onkeydown="if(event.key==='Enter')hubCreate()">
+        <button class="btn btn-primary" onclick="hubCreate()">Create →</button>
+      </div>
+      <div class="hub-error" id="hub-create-error"></div>
+    </div>
+
+    <div class="hub-divider">or</div>
+
+    <div class="hub-section">
+      <div class="hub-section-label">Join Existing Project</div>
+      <div class="hub-input-row">
+        <input class="hub-input" type="text" id="hub-join-id" placeholder="Project ID…" autocomplete="off"
+               style="font-family:'Geist Mono',monospace;letter-spacing:0.06em"
+               onkeydown="if(event.key==='Enter')hubJoin()">
+        <button class="btn btn-ghost" style="border-color:var(--border)" onclick="hubJoin()">Join →</button>
+      </div>
+      <div class="hub-error" id="hub-join-error"></div>
+    </div>
+
+    <div id="hub-recent-section" style="display:none">
+      <div class="hub-section-label" style="margin-bottom:8px">Recent Projects</div>
+      <div id="hub-recent-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Auth Screen ── -->
+<div class="screen hidden" id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">dftf.io — Scene Tracker</div>
+    <div class="auth-project" id="auth-project-name">Project</div>
+    <div class="auth-hint">Password required</div>
+    <input type="password" class="auth-input" id="auth-input" placeholder="Password"
+           autocomplete="current-password" onkeydown="if(event.key==='Enter')authTryLogin()">
+    <button class="auth-submit" onclick="authTryLogin()">Enter</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-back" onclick="showScreen('hub')">← Back to projects</div>
+  </div>
+</div>
+
+<!-- ── Loading Screen ── -->
+<div class="screen hidden" id="loading-screen">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loading-text">Loading…</div>
+  </div>
+</div>
+
+<!-- ── Setup Screen ── -->
+<div class="screen hidden" id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-title">Database Setup Required</div>
+    <div class="setup-sub">The SceneTracker tables haven't been created yet. Run this SQL once in your <a href="https://supabase.com/dashboard/project/huzweyntxcbyhjogvcxy/sql/new" target="_blank" style="color:var(--accent)">Supabase SQL Editor</a>, then reload.</div>
+    <pre class="setup-sql" id="setup-sql-text"></pre>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="window.open('https://supabase.com/dashboard/project/huzweyntxcbyhjogvcxy/sql/new','_blank')">Open SQL Editor →</button>
+      <button class="btn btn-ghost" onclick="setupCopySQL()">Copy SQL</button>
+      <button class="btn btn-ghost" onclick="window.location.reload()">Retry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Activity Panel ── -->
+<div class="activity-panel" id="activity-panel">
+  <div class="activity-header">
+    <div class="activity-title">Activity Log</div>
+    <button class="activity-close" onclick="toggleActivityPanel()">×</button>
+  </div>
+  <div class="activity-list" id="activity-list">
+    <div class="activity-empty">No activity yet</div>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div class="page-wrap" id="app" style="display:none">
+  <a class="site-back" href="https://dftf.io">← dftf.io</a>
+
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-title">Scene Tracker</div>
+      <div class="page-title-meta">
+        <span class="page-project-name" id="project-display-name"></span>
+        <div class="conn-badge connecting" id="conn-badge">
+          <span class="conn-dot"></span>
+          <span id="conn-label">Connecting</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-glance" onclick="setView('glance')">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="14" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="14" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+          At a Glance
+        </button>
+        <button class="view-btn" id="btn-list" onclick="setView('list')">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          List
+        </button>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-activity" onclick="toggleActivityPanel()" title="Activity log">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Log
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="copyShareLink()" title="Copy share link">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="12" cy="3" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="13" r="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 7l4-3M6 9l4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Share
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('csv-file-input').click()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Import
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 10V1M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Export
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="openReelModal()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Reels
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="openTagModal()">Tags</button>
+      <button class="btn btn-ghost btn-sm" onclick="openStatusMgrModal()">Statuses</button>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="showProjectSettings()" title="Project settings">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openSceneModal()">+ Add Scene</button>
     </div>
   </div>
 
-  <!-- App -->
-  <div class="page-wrap" id="app">
-    <a class="site-back" href="https://dftf.io">← dftf.io</a>
+  <!-- Edit 1 Ready tracker -->
+  <div id="edit1-tracker-slot"></div>
 
-    <div class="page-header">
-      <div>
-        <div class="page-title">Scene Tracker</div>
-        <div class="page-subtitle">VFX Scene Status</div>
-      </div>
-      <div class="header-actions">
-        <div class="view-toggle">
-          <button class="view-btn active" id="btn-glance" onclick="setView('glance')">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="14" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="14" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
-            At a Glance
-          </button>
-          <button class="view-btn" id="btn-list" onclick="setView('list')">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            List
-          </button>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('csv-file-input').click()">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Import
-        </button>
-        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 10V1M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Export
-        </button>
-        <button class="btn btn-ghost btn-sm" onclick="openReelModal()">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Reels
-        </button>
-        <button class="btn btn-ghost btn-sm" onclick="openTagModal()">Tags</button>
-        <button class="btn btn-ghost btn-sm" onclick="openStatusMgrModal()">Statuses</button>
-        <button class="btn btn-ghost btn-icon btn-sm" onclick="openPwdSettings()" title="Access settings">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="openSceneModal()">+ Add Scene</button>
-      </div>
-    </div>
+  <!-- Stats bar -->
+  <div class="stats-bar" id="stats-bar"></div>
 
-    <!-- Edit 1 Ready tracker slot -->
-    <div id="edit1-tracker-slot"></div>
+  <!-- Filter bar -->
+  <div class="filter-bar" id="filter-bar"></div>
 
-    <!-- Status stat chips -->
-    <div class="stats-bar" id="stats-bar"></div>
+  <!-- Tag legend -->
+  <div class="tag-legend" id="tag-legend" style="display:none"></div>
 
-    <!-- Tag legend -->
-    <div class="tag-legend" id="tag-legend" style="display:none"></div>
-
-    <div id="view-glance">
-      <div class="glance-grid" id="glance-grid"></div>
-    </div>
-
-    <div id="view-list" style="display:none">
-      <div class="list-table-wrap">
-        <table class="list-table">
-          <thead>
-            <tr>
-              <th id="th-number" onclick="sortBy('number')"># <span class="sort-arrow" id="sa-number"></span></th>
-              <th id="th-name"   onclick="sortBy('name')">Name <span class="sort-arrow" id="sa-name"></span></th>
-              <th id="th-reel"   onclick="sortBy('reel')">Reel <span class="sort-arrow" id="sa-reel"></span></th>
-              <th id="th-status" onclick="sortBy('status')">Status <span class="sort-arrow" id="sa-status"></span></th>
-              <th>Tags</th>
-              <th>Notes</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="list-body"></tbody>
-          <tfoot id="list-tfoot"></tfoot>
-        </table>
-      </div>
-    </div>
+  <div id="view-glance">
+    <div class="glance-grid" id="glance-grid"></div>
   </div>
 
-  <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="handleCSVFile(event)">
+  <div id="view-list" style="display:none">
+    <div class="list-table-wrap">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th id="th-number" onclick="sortBy('number')"># <span class="sort-arrow" id="sa-number"></span></th>
+            <th id="th-name"   onclick="sortBy('name')">Name <span class="sort-arrow" id="sa-name"></span></th>
+            <th id="th-reel"   onclick="sortBy('reel')">Reel <span class="sort-arrow" id="sa-reel"></span></th>
+            <th id="th-status" onclick="sortBy('status')">Status <span class="sort-arrow" id="sa-status"></span></th>
+            <th>Tags</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="list-body"></tbody>
+        <tfoot id="list-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
 
-  <!-- ── Scene Modal ── -->
-  <div class="modal-overlay hidden" id="scene-modal-overlay" onclick="handleOverlayClick(event,'scene-modal-overlay')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title" id="scene-modal-title">Add Scene</div>
-        <button class="modal-close" onclick="closeSceneModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="scene-id">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Scene Number</label>
-            <input type="text" class="form-input" id="scene-number" placeholder="e.g. 001" autocomplete="off" style="font-family:'Geist Mono',monospace">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Reel</label>
-            <div class="cd-trigger" id="reel-cd-trigger" onclick="openReelPicker(this)">
-              <div class="cd-sel"><div class="cd-sel-dot" id="reel-cd-dot" style="background:var(--dim)"></div><span class="cd-sel-label" id="reel-cd-label">—</span></div>
-              <svg class="cd-caret" width="12" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <input type="hidden" id="scene-reel">
-          </div>
+<input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="handleCSVFile(event)">
+
+<!-- ── Scene Modal ── -->
+<div class="modal-overlay hidden" id="scene-modal-overlay" onclick="handleOverlayClick(event,'scene-modal-overlay')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="scene-modal-title">Add Scene</div>
+      <button class="modal-close" onclick="closeSceneModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="scene-id">
+      <input type="hidden" id="scene-old-status">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Scene Number</label>
+          <input type="text" class="form-input" id="scene-number" placeholder="e.g. 001" autocomplete="off" style="font-family:'Geist Mono',monospace">
         </div>
         <div class="form-group">
-          <label class="form-label">Scene Name</label>
-          <input type="text" class="form-input" id="scene-name" placeholder="Descriptive name (optional)" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <div class="cd-trigger" id="status-cd-trigger" onclick="openStatusPicker(this)">
-            <div class="cd-sel"><div class="cd-sel-dot" id="status-cd-dot"></div><span class="cd-sel-label" id="status-cd-label">To Do</span></div>
+          <label class="form-label">Reel</label>
+          <div class="cd-trigger" id="reel-cd-trigger" onclick="openReelPicker(this)">
+            <div class="cd-sel"><div class="cd-sel-dot" id="reel-cd-dot" style="background:var(--dim)"></div><span class="cd-sel-label" id="reel-cd-label">—</span></div>
             <svg class="cd-caret" width="12" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <input type="hidden" id="scene-status" value="not-received">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tags</label>
-          <div class="tag-select-grid" id="scene-tags-grid"></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Notes</label>
-          <textarea class="form-textarea" id="scene-notes" placeholder="Any notes…"></textarea>
+          <input type="hidden" id="scene-reel">
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger btn-sm" id="scene-delete-btn" style="margin-right:auto;display:none" onclick="deleteScene()">Delete</button>
-        <button class="btn btn-ghost btn-sm" onclick="closeSceneModal()">Cancel</button>
-        <button class="btn btn-primary btn-sm" onclick="saveScene()">Save</button>
+      <div class="form-group">
+        <label class="form-label">Scene Name</label>
+        <input type="text" class="form-input" id="scene-name" placeholder="Descriptive name (optional)" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <div class="cd-trigger" id="status-cd-trigger" onclick="openStatusPicker(this)">
+          <div class="cd-sel"><div class="cd-sel-dot" id="status-cd-dot"></div><span class="cd-sel-label" id="status-cd-label">Not Received</span></div>
+          <svg class="cd-caret" width="12" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <input type="hidden" id="scene-status" value="not-received">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags</label>
+        <div class="tag-select-grid" id="scene-tags-grid"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Group <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" class="form-input" id="scene-group" placeholder="e.g. ATV Chase, Finale…"
+               list="group-datalist" autocomplete="off" oninput="updateGroupPreview()">
+        <datalist id="group-datalist"></datalist>
+        <div id="group-color-preview" style="display:none;margin-top:6px;font-size:10px;color:var(--text2);display:flex;align-items:center;gap:6px">
+          <span id="group-color-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0"></span>
+          <span id="group-color-label"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="scene-notes" placeholder="Any notes…"></textarea>
       </div>
     </div>
-  </div>
-
-  <!-- ── Reel Modal ── -->
-  <div class="modal-overlay hidden" id="reel-modal-overlay" onclick="handleOverlayClick(event,'reel-modal-overlay')">
-    <div class="modal modal-wide" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">Manage Reels</div>
-        <button class="modal-close" onclick="closeReelModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Reels are displayed in rows of 3 in At-a-Glance view.</p>
-        <div class="settings-list" id="reel-mgr-list"></div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="addTempReel()">+ Add Reel</button>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost btn-sm" onclick="closeReelModal()">Cancel</button>
-        <button class="btn btn-primary btn-sm" onclick="saveReels()">Save Reels</button>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="scene-delete-btn" style="margin-right:auto;display:none" onclick="deleteScene()">Delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeSceneModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveScene()">Save</button>
     </div>
   </div>
+</div>
 
-  <!-- ── Tag Manager Modal ── -->
-  <div class="modal-overlay hidden" id="tag-modal-overlay" onclick="handleOverlayClick(event,'tag-modal-overlay')">
-    <div class="modal modal-wide" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">Manage Tags</div>
-        <button class="modal-close" onclick="closeTagModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="settings-list" id="tag-mgr-list"></div>
-        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
-          <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;font-family:'Geist Mono',monospace">Add Tag</div>
-          <div style="display:flex;gap:8px;align-items:flex-start">
-            <input type="text" class="form-input" id="new-tag-input" placeholder="Tag name" style="flex:1">
-            <button class="btn btn-primary btn-sm" onclick="addTag()" style="align-self:stretch">Add</button>
-          </div>
-          <div class="color-palette" id="new-tag-palette"></div>
-          <input type="hidden" id="new-tag-color" value="#7eb0e8">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost btn-sm" onclick="closeTagModal()">Done</button>
-      </div>
+<!-- ── Reel Modal ── -->
+<div class="modal-overlay hidden" id="reel-modal-overlay" onclick="handleOverlayClick(event,'reel-modal-overlay')">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Manage Reels</div>
+      <button class="modal-close" onclick="closeReelModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Reels are displayed in rows of 3 in At-a-Glance view.</p>
+      <div class="settings-list" id="reel-mgr-list"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="addTempReel()">+ Add Reel</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeReelModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveReels()">Save Reels</button>
     </div>
   </div>
+</div>
 
-  <!-- ── Status Manager Modal ── -->
-  <div class="modal-overlay hidden" id="status-mgr-overlay" onclick="handleOverlayClick(event,'status-mgr-overlay')">
-    <div class="modal modal-wide" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">Manage Statuses</div>
-        <button class="modal-close" onclick="closeStatusMgrModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="settings-list" id="status-mgr-list"></div>
-        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
-          <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;font-family:'Geist Mono',monospace">Add Status</div>
-          <div style="display:flex;gap:8px;align-items:flex-start">
-            <input type="text" class="form-input" id="new-status-input" placeholder="Status label" style="flex:1">
-            <button class="btn btn-primary btn-sm" onclick="addCustomStatus()" style="align-self:stretch">Add</button>
-          </div>
-          <div class="color-palette" id="new-status-palette"></div>
-          <input type="hidden" id="new-status-color" value="#7eb0e8">
+<!-- ── Tag Manager Modal ── -->
+<div class="modal-overlay hidden" id="tag-modal-overlay" onclick="handleOverlayClick(event,'tag-modal-overlay')">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Manage Tags</div>
+      <button class="modal-close" onclick="closeTagModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-list" id="tag-mgr-list"></div>
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;font-family:'Geist Mono',monospace">Add Tag</div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <input type="text" class="form-input" id="new-tag-input" placeholder="Tag name" style="flex:1">
+          <button class="btn btn-primary btn-sm" onclick="addTag()" style="align-self:stretch">Add</button>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost btn-sm" onclick="closeStatusMgrModal()">Done</button>
+        <div class="color-palette" id="new-tag-palette"></div>
+        <input type="hidden" id="new-tag-color" value="#7eb0e8">
       </div>
     </div>
-  </div>
-
-  <!-- ── Import Modal ── -->
-  <div class="modal-overlay hidden" id="import-modal-overlay" onclick="handleOverlayClick(event,'import-modal-overlay')">
-    <div class="modal modal-wide" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">Import CSV</div>
-        <button class="modal-close" onclick="closeImportModal()">×</button>
-      </div>
-      <div class="modal-body" id="import-modal-body"></div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">Cancel</button>
-        <button class="btn btn-primary btn-sm" onclick="confirmImport()">Import</button>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeTagModal()">Done</button>
     </div>
   </div>
+</div>
 
-  <!-- ── Password Settings Modal ── -->
-  <div class="modal-overlay hidden" id="pwd-settings-overlay" onclick="handleOverlayClick(event,'pwd-settings-overlay')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">Access Password</div>
-        <button class="modal-close" onclick="closePwdSettings()">×</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7">Set a password to restrict access. Once authenticated, each device is remembered.</p>
-        <div class="form-group" id="pwd-current-group" style="display:none">
-          <label class="form-label">Current Password</label>
-          <input type="password" class="form-input" id="pwd-current" autocomplete="current-password">
+<!-- ── Status Manager Modal ── -->
+<div class="modal-overlay hidden" id="status-mgr-overlay" onclick="handleOverlayClick(event,'status-mgr-overlay')">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Manage Statuses</div>
+      <button class="modal-close" onclick="closeStatusMgrModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-list" id="status-mgr-list"></div>
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;font-family:'Geist Mono',monospace">Add Status</div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <input type="text" class="form-input" id="new-status-input" placeholder="Status label" style="flex:1">
+          <button class="btn btn-primary btn-sm" onclick="addCustomStatus()" style="align-self:stretch">Add</button>
         </div>
-        <div class="form-group">
-          <label class="form-label">New Password</label>
-          <input type="password" class="form-input" id="pwd-new" placeholder="Leave blank to remove" autocomplete="new-password">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirm</label>
-          <input type="password" class="form-input" id="pwd-confirm" autocomplete="new-password">
-        </div>
-        <div id="pwd-settings-error" style="display:none;color:#e86b6b;font-size:12px;margin-top:4px"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost btn-sm" onclick="closePwdSettings()">Cancel</button>
-        <button class="btn btn-primary btn-sm" onclick="savePwdSettings()">Save</button>
+        <div class="color-palette" id="new-status-palette"></div>
+        <input type="hidden" id="new-status-color" value="#7eb0e8">
       </div>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeStatusMgrModal()">Done</button>
+    </div>
   </div>
+</div>
 
-  <!-- Global floating picker panel -->
-  <div id="cd-panel" style="display:none"></div>
+<!-- ── Import Modal ── -->
+<div class="modal-overlay hidden" id="import-modal-overlay" onclick="handleOverlayClick(event,'import-modal-overlay')">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Import CSV</div>
+      <button class="modal-close" onclick="closeImportModal()">×</button>
+    </div>
+    <div class="modal-body" id="import-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmImport()">Import</button>
+    </div>
+  </div>
+</div>
 
-  <script>
-  // ────────────────────────────────────────────────────────────────────────────
-  // Constants
-  // ────────────────────────────────────────────────────────────────────────────
+<!-- ── Project Settings Modal ── -->
+<div class="modal-overlay hidden" id="project-settings-overlay" onclick="handleOverlayClick(event,'project-settings-overlay')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Project Settings</div>
+      <button class="modal-close" onclick="closeProjectSettings()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Project Name</label>
+        <input type="text" class="form-input" id="ps-name">
+      </div>
+      <div class="form-group" id="ps-pwd-group">
+        <label class="form-label">New Password <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">(leave blank to keep current)</span></label>
+        <input type="password" class="form-input" id="ps-pwd" placeholder="Set or change password" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="ps-pwd-confirm" autocomplete="new-password">
+      </div>
+      <div id="ps-error" style="display:none;color:#e86b6b;font-size:12px;margin-top:4px"></div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;font-family:'Geist Mono',monospace">Project ID</div>
+        <div style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:0.06em" id="ps-project-id"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeProjectSettings()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveProjectSettings()">Save</button>
+    </div>
+  </div>
+</div>
 
-  const STORAGE_KEY = 'dftf_scene_tracker_v1';
-  const AUTH_KEY    = 'dftf_st_auth_v1';
-  const PWD_KEY     = 'dftf_st_pwd_v1';
+<!-- Global floating picker panel -->
+<div id="cd-panel" style="display:none"></div>
 
-  const DEFAULT_STATUSES = [
-    { key: 'complete',     label: 'Edit 1 Ready',       color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)',    builtin: true },
-    { key: 'in-progress',  label: 'In Progress',        color: '#7eb0e8', bg: 'rgba(46,80,128,0.22)',    builtin: true },
-    { key: 'todo',         label: 'To Do',              color: '#e8b84b', bg: 'rgba(122,90,26,0.22)',    builtin: true },
-    { key: 'ready',        label: 'Ready to Edit',      color: '#4dc8c8', bg: 'rgba(26,92,92,0.22)',     builtin: true },
-    { key: 'prepping',     label: 'Received/Prepping',  color: '#e89a4b', bg: 'rgba(107,61,26,0.22)',    builtin: true },
-    { key: 'not-received', label: 'Not Received',       color: '#e86b6b', bg: 'rgba(107,26,26,0.22)',    builtin: true },
-    { key: 'rescan',       label: 'Needs Rescan',       color: '#d4cc4b', bg: 'rgba(92,90,26,0.22)',     builtin: true },
-    { key: 'partial',      label: 'Partial',            color: '#c97fd4', bg: 'rgba(107,46,114,0.22)',   builtin: true },
-    { key: 'na',           label: 'N/A (AI)',           color: '#666',    bg: 'rgba(255,255,255,0.04)',  builtin: true },
-    { key: 'temp',         label: 'Temp',               color: '#555',    bg: 'rgba(255,255,255,0.02)',  builtin: true },
-  ];
+<script>
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const { createClient } = supabase;
+const SUPA_URL = 'https://huzweyntxcbyhjogvcxy.supabase.co';
+const SUPA_KEY = 'sb_publishable_Xc7Igo5ZX-h-orG7gVu2lQ_IQz_USAO';
+const sb = createClient(SUPA_URL, SUPA_KEY);
 
-  const TAG_PALETTE = [
-    '#e86b6b','#e89a4b','#e8c84b','#6dbf6d',
-    '#4dc8c8','#7eb0e8','#8b6fd4','#c97fd4',
-    '#e86bb0','#ffe066','#aaaaaa','#5ca8ad',
-  ];
+// ── Constants ─────────────────────────────────────────────────────────────────
+const MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS st_projects (
+  id            TEXT PRIMARY KEY,
+  name          TEXT NOT NULL DEFAULT 'Untitled Project',
+  password_hash TEXT,
+  reels         JSONB NOT NULL DEFAULT '["R1","R2","R3","R4","R5","R6"]',
+  tags          JSONB NOT NULL DEFAULT '[]',
+  statuses      JSONB,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS st_scenes (
+  id          TEXT PRIMARY KEY,
+  project_id  TEXT NOT NULL REFERENCES st_projects(id) ON DELETE CASCADE,
+  number      TEXT DEFAULT '',
+  name        TEXT DEFAULT '',
+  reel        TEXT DEFAULT '',
+  status      TEXT DEFAULT 'not-received',
+  notes       TEXT DEFAULT '',
+  tags        JSONB DEFAULT '[]',
+  group_id    TEXT DEFAULT NULL,
+  group_color TEXT DEFAULT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS st_activity (
+  id           TEXT PRIMARY KEY,
+  project_id   TEXT NOT NULL REFERENCES st_projects(id) ON DELETE CASCADE,
+  scene_id     TEXT,
+  scene_number TEXT,
+  scene_name   TEXT,
+  old_status   TEXT,
+  new_status   TEXT,
+  changed_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_st_scenes_project   ON st_scenes(project_id);
+CREATE INDEX IF NOT EXISTS idx_st_scenes_updated   ON st_scenes(project_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_st_activity_project ON st_activity(project_id, changed_at DESC);
+ALTER TABLE st_projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE st_scenes   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE st_activity ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "st_projects_public" ON st_projects FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "st_scenes_public"   ON st_scenes   FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "st_activity_public" ON st_activity FOR ALL TO anon USING (true) WITH CHECK (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE st_projects;
+ALTER PUBLICATION supabase_realtime ADD TABLE st_scenes;
+ALTER PUBLICATION supabase_realtime ADD TABLE st_activity;
+SELECT 'SceneTracker migration complete' AS status;`;
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // State
-  // ────────────────────────────────────────────────────────────────────────────
+const DEFAULT_STATUSES = [
+  { key: 'complete',     label: 'Edit 1 Ready',       color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)',    builtin: true },
+  { key: 'in-progress',  label: 'In Progress',        color: '#7eb0e8', bg: 'rgba(46,80,128,0.22)',    builtin: true },
+  { key: 'todo',         label: 'To Do',              color: '#e8b84b', bg: 'rgba(122,90,26,0.22)',    builtin: true },
+  { key: 'ready',        label: 'Ready to Edit',      color: '#4dc8c8', bg: 'rgba(26,92,92,0.22)',     builtin: true },
+  { key: 'prepping',     label: 'Received/Prepping',  color: '#e89a4b', bg: 'rgba(107,61,26,0.22)',    builtin: true },
+  { key: 'not-received', label: 'Not Received',       color: '#e86b6b', bg: 'rgba(107,26,26,0.22)',    builtin: true },
+  { key: 'rescan',       label: 'Needs Rescan',       color: '#d4cc4b', bg: 'rgba(92,90,26,0.22)',     builtin: true },
+  { key: 'partial',      label: 'Partial',            color: '#c97fd4', bg: 'rgba(107,46,114,0.22)',   builtin: true },
+  { key: 'na',           label: 'N/A (AI)',           color: '#666',    bg: 'rgba(255,255,255,0.04)',  builtin: true },
+  { key: 'temp',         label: 'Temp',               color: '#555',    bg: 'rgba(255,255,255,0.02)',  builtin: true },
+];
 
-  let state = {
-    reels:    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6'],
-    scenes:   [],
+const TAG_PALETTE = [
+  '#e86b6b','#e89a4b','#e8c84b','#6dbf6d',
+  '#4dc8c8','#7eb0e8','#8b6fd4','#c97fd4',
+  '#e86bb0','#ffe066','#aaaaaa','#5ca8ad',
+];
+
+// ── App State ─────────────────────────────────────────────────────────────────
+let state = {
+  reels:    ['R1','R2','R3','R4','R5','R6'],
+  scenes:   [],
+  tags:     [],
+  statuses: JSON.parse(JSON.stringify(DEFAULT_STATUSES)),
+  view:     'glance',
+  sort:     { col: 'reel', dir: 1 },
+};
+
+let _currentProjectId   = null;
+let _currentProject     = null;
+let _activities         = [];
+let _filter             = 'all';
+let _activityOpen       = false;
+let _connState          = 'connecting';
+let _realtimeChannel    = null;
+let _listQA             = { reel: '', status: 'not-received' };
+const _pendingWrites    = new Map();   // id → timer
+
+// ── Supabase helpers ──────────────────────────────────────────────────────────
+
+function markPending(id) {
+  if (_pendingWrites.has(id)) clearTimeout(_pendingWrites.get(id));
+  const t = setTimeout(() => _pendingWrites.delete(id), 3000);
+  _pendingWrites.set(id, t);
+}
+function isPending(id) { return _pendingWrites.has(id); }
+
+async function sha256hex(str) {
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e) {
+    // fallback: simple non-secure hash (only if crypto.subtle unavailable)
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    return 'simple_' + Math.abs(h).toString(16).padStart(8,'0');
+  }
+}
+
+function dbRowToScene(row) {
+  return {
+    id:          row.id,
+    number:      row.number      || '',
+    name:        row.name        || '',
+    reel:        row.reel        || '',
+    status:      row.status      || 'not-received',
+    notes:       row.notes       || '',
+    tags:        row.tags        || [],
+    group_id:    row.group_id    || '',
+    group_color: row.group_color || '',
+  };
+}
+
+async function upsertScene(scene) {
+  if (!_currentProjectId) return;
+  markPending(scene.id);
+  const { error } = await sb.from('st_scenes').upsert({
+    id:          scene.id,
+    project_id:  _currentProjectId,
+    number:      scene.number      || '',
+    name:        scene.name        || '',
+    reel:        scene.reel        || '',
+    status:      scene.status      || 'not-received',
+    notes:       scene.notes       || '',
+    tags:        scene.tags        || [],
+    group_id:    scene.group_id    || null,
+    group_color: scene.group_color || null,
+    updated_at:  new Date().toISOString(),
+  });
+  if (error) showToast('Sync error: ' + error.message, 'error');
+}
+
+async function deleteSceneDb(id) {
+  if (!_currentProjectId) return;
+  markPending(id);
+  const { error } = await sb.from('st_scenes').delete().eq('id', id);
+  if (error) showToast('Delete error: ' + error.message, 'error');
+}
+
+async function saveProjectConfig() {
+  if (!_currentProjectId) return;
+  const { error } = await sb.from('st_projects').update({
+    reels:      state.reels,
+    tags:       state.tags,
+    statuses:   state.statuses,
+    updated_at: new Date().toISOString(),
+  }).eq('id', _currentProjectId);
+  if (error) showToast('Config sync error', 'error');
+}
+
+async function logActivity(sceneId, sceneNumber, sceneName, oldStatus, newStatus) {
+  if (!_currentProjectId || oldStatus === newStatus) return;
+  await sb.from('st_activity').insert({
+    id:           uid(),
+    project_id:   _currentProjectId,
+    scene_id:     sceneId,
+    scene_number: sceneNumber,
+    scene_name:   sceneName,
+    old_status:   oldStatus,
+    new_status:   newStatus,
+    changed_at:   new Date().toISOString(),
+  });
+}
+
+// ── Realtime ──────────────────────────────────────────────────────────────────
+
+function subscribeRealtime() {
+  if (_realtimeChannel) { sb.removeChannel(_realtimeChannel); }
+
+  _realtimeChannel = sb.channel(`st-project-${_currentProjectId}`)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'st_scenes',
+      filter: `project_id=eq.${_currentProjectId}`,
+    }, handleSceneChange)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'st_projects',
+      filter: `id=eq.${_currentProjectId}`,
+    }, handleProjectChange)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'st_activity',
+      filter: `project_id=eq.${_currentProjectId}`,
+    }, handleActivityInsert)
+    .subscribe(status => {
+      setConnState(status === 'SUBSCRIBED' ? 'live' : status === 'CLOSED' ? 'offline' : 'connecting');
+    });
+}
+
+function handleSceneChange(payload) {
+  const { eventType, new: nr, old: or } = payload;
+  const id = nr?.id || or?.id;
+  if (!id) return;
+  if (isPending(id)) return;   // echo suppression
+
+  if (eventType === 'DELETE') {
+    state.scenes = state.scenes.filter(s => s.id !== id);
+  } else {
+    const scene = dbRowToScene(nr);
+    const idx = state.scenes.findIndex(s => s.id === id);
+    if (idx >= 0) state.scenes[idx] = scene;
+    else state.scenes.push(scene);
+  }
+  render();
+}
+
+function handleProjectChange(payload) {
+  const p = payload.new;
+  if (!p) return;
+  if (p.reels)    state.reels    = p.reels;
+  if (p.tags)     state.tags     = p.tags;
+  if (p.statuses) state.statuses = p.statuses;
+  if (p.name)     document.getElementById('project-display-name').textContent = p.name;
+  render();
+}
+
+function handleActivityInsert(payload) {
+  if (!payload.new) return;
+  _activities.unshift(payload.new);
+  if (_activities.length > 100) _activities.pop();
+  renderActivityPanel();
+}
+
+function setConnState(s) {
+  _connState = s;
+  const badge = document.getElementById('conn-badge');
+  const label = document.getElementById('conn-label');
+  if (!badge) return;
+  badge.className = 'conn-badge ' + s;
+  label.textContent = s === 'live' ? 'Live' : s === 'offline' ? 'Offline' : 'Connecting';
+}
+
+// ── Project Loading ───────────────────────────────────────────────────────────
+
+function generateProjectId() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let id = 'st-';
+  for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+function getRecentProjects() {
+  try { return JSON.parse(localStorage.getItem('st_recent') || '[]'); } catch(e) { return []; }
+}
+function saveRecentProject(id, name) {
+  try {
+    const arr = getRecentProjects().filter(p => p.id !== id);
+    arr.unshift({ id, name, ts: Date.now() });
+    localStorage.setItem('st_recent', JSON.stringify(arr.slice(0, 8)));
+  } catch(e) {}
+}
+function getDeviceAuth(projectId) {
+  try { return localStorage.getItem(`st_auth_${projectId}`) || ''; } catch(e) { return ''; }
+}
+function setDeviceAuth(projectId, hash) {
+  try { localStorage.setItem(`st_auth_${projectId}`, hash); } catch(e) {}
+}
+function getPrefs() {
+  try { return JSON.parse(localStorage.getItem('st_prefs') || '{}'); } catch(e) { return {}; }
+}
+function savePrefs(delta) {
+  try {
+    const p = getPrefs();
+    localStorage.setItem('st_prefs', JSON.stringify({ ...p, ...delta }));
+  } catch(e) {}
+}
+
+function showScreen(name) {
+  ['hub','auth','loading','setup'].forEach(n => {
+    document.getElementById(n + '-screen').classList.toggle('hidden', n !== name);
+  });
+  document.getElementById('app').style.display = name === 'app' ? '' : 'none';
+}
+
+async function initFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const pid = params.get('p');
+  if (pid) {
+    await loadProject(pid);
+  } else {
+    renderHub();
+    showScreen('hub');
+  }
+}
+
+function renderHub() {
+  const recent = getRecentProjects();
+  const sec = document.getElementById('hub-recent-section');
+  const list = document.getElementById('hub-recent-list');
+  if (recent.length === 0) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  list.innerHTML = recent.map(p => `
+    <div class="hub-recent-item" onclick="loadProject('${esc(p.id)}')">
+      <div>
+        <div class="hub-recent-name">${esc(p.name || 'Untitled')}</div>
+        <div class="hub-recent-id">${esc(p.id)}</div>
+      </div>
+      <div class="hub-recent-arrow">→</div>
+    </div>`).join('');
+}
+
+async function hubCreate() {
+  const name = document.getElementById('hub-project-name').value.trim() || 'Untitled Project';
+  const id = generateProjectId();
+  document.getElementById('hub-create-error').textContent = '';
+  showScreen('loading');
+  document.getElementById('loading-text').textContent = 'Creating project…';
+
+  const { error } = await sb.from('st_projects').insert({
+    id, name,
+    reels:    JSON.parse(JSON.stringify(['R1','R2','R3','R4','R5','R6'])),
     tags:     [],
     statuses: JSON.parse(JSON.stringify(DEFAULT_STATUSES)),
-    view:     'glance',
-    sort:     { col: 'reel', dir: 1 },
-  };
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
 
-  // List quick-add persistent state
-  let _listQA = { reel: '', status: 'not-received' };
+  if (error) {
+    if (error.message?.includes('relation') || error.code === '42P01') {
+      showSetupScreen();
+    } else {
+      showScreen('hub');
+      document.getElementById('hub-create-error').textContent = error.message;
+    }
+    return;
+  }
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      if (Array.isArray(s.reels))    state.reels    = s.reels;
-      if (Array.isArray(s.scenes))   state.scenes   = s.scenes;
-      if (Array.isArray(s.tags))     state.tags     = s.tags;
-      if (Array.isArray(s.statuses)) {
-        // Migrate: rename old 'Complete' to 'Edit 1 Ready'
-        const comp = s.statuses.find(st => st.key === 'complete');
-        if (comp && comp.label === 'Complete') comp.label = 'Edit 1 Ready';
-        state.statuses = s.statuses;
+  window.history.pushState({}, '', '?p=' + id);
+  await loadProject(id);
+}
+
+async function hubJoin() {
+  const id = document.getElementById('hub-join-id').value.trim();
+  document.getElementById('hub-join-error').textContent = '';
+  if (!id) { document.getElementById('hub-join-id').focus(); return; }
+  await loadProject(id, true);
+}
+
+async function loadProject(pid, fromHub) {
+  _currentProjectId = pid;
+  showScreen('loading');
+  document.getElementById('loading-text').textContent = 'Loading project…';
+
+  const { data: project, error } = await sb.from('st_projects').select('*').eq('id', pid).single();
+
+  if (error) {
+    if (error.code === '42P01' || error.message?.includes('relation')) {
+      showSetupScreen(); return;
+    }
+    if (error.code === 'PGRST116') {
+      // Not found
+      if (fromHub) {
+        document.getElementById('hub-join-error').textContent = 'Project not found';
+        showScreen('hub'); return;
       }
-      if (s.view) state.view = s.view;
-    } catch(e) {}
+      showScreen('hub'); return;
+    }
+    showScreen('hub');
+    showToast('Load error: ' + error.message, 'error');
+    return;
   }
 
-  function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        reels: state.reels, scenes: state.scenes,
-        tags: state.tags, statuses: state.statuses, view: state.view,
-      }));
-    } catch(e) {}
+  _currentProject = project;
+  // Push URL if not already there
+  if (!window.location.search.includes('p=' + pid)) {
+    window.history.pushState({}, '', '?p=' + pid);
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Helpers
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 7); }
-
-  function statusFor(key) {
-    return state.statuses.find(s => s.key === key) || state.statuses.find(s => s.key === 'todo') || state.statuses[0];
-  }
-
-  function tagFor(id) { return state.tags.find(t => t.id === id); }
-
-  /** Pad a purely numeric string to 3 digits. Non-numeric strings pass through unchanged. */
-  function padSceneNum(val) {
-    if (!val) return val;
-    const t = String(val).trim();
-    if (/^\d+$/.test(t)) return t.padStart(3, '0');
-    return t;
-  }
-
-  /** Return the next auto-number for a reel (highest existing numeric + 1, padded to 3 digits). */
-  function getNextReelNumber(reel) {
-    const nums = state.scenes
-      .filter(s => s.reel === reel)
-      .map(s => parseInt(s.number, 10))
-      .filter(n => !isNaN(n));
-    const max = nums.length > 0 ? Math.max(...nums) : 0;
-    return String(max + 1).padStart(3, '0');
-  }
-
-  function badge(statusKey, clickable, sceneId) {
-    const s = statusFor(statusKey);
-    const cls = clickable ? ' clickable' : '';
-    const onclick = clickable
-      ? `onclick="event.stopPropagation();openInlineStatusPicker(event,this,'${sceneId}')"`
-      : '';
-    return `<span class="badge${cls}" style="color:${s.color};background:${s.bg}" ${onclick}>${esc(s.label)}</span>`;
-  }
-
-  /** Tag chip for list view (text label) */
-  function tagChip(tagId) {
-    const t = tagFor(tagId);
-    if (!t) return '';
-    return `<span class="tag-chip" style="color:${t.color};background:${t.color}22;border-color:${t.color}44">${esc(t.label)}</span>`;
-  }
-
-  /** Tag dot for at-a-glance (color only) */
-  function tagDot(tagId) {
-    const t = tagFor(tagId);
-    if (!t) return '';
-    return `<span class="tag-dot" style="background:${t.color}" title="${esc(t.label)}"></span>`;
-  }
-
-  function esc(str) {
-    return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function handleOverlayClick(e, id) {
-    if (e.target === document.getElementById(id)) {
-      ({
-        'scene-modal-overlay':   closeSceneModal,
-        'reel-modal-overlay':    closeReelModal,
-        'tag-modal-overlay':     closeTagModal,
-        'status-mgr-overlay':    closeStatusMgrModal,
-        'import-modal-overlay':  closeImportModal,
-        'pwd-settings-overlay':  closePwdSettings,
-      })[id]?.();
+  // Check password
+  if (project.password_hash) {
+    const stored = getDeviceAuth(pid);
+    if (stored !== project.password_hash) {
+      document.getElementById('auth-project-name').textContent = project.name || 'Project';
+      document.getElementById('auth-input').value = '';
+      document.getElementById('auth-error').textContent = '';
+      showScreen('auth');
+      setTimeout(() => document.getElementById('auth-input').focus(), 80);
+      return;
     }
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Toast
-  // ────────────────────────────────────────────────────────────────────────────
+  await enterProject(project);
+}
 
-  let _toastTimer;
-  function showToast(msg, type) {
-    clearTimeout(_toastTimer);
-    document.querySelector('.toast')?.remove();
+async function authTryLogin() {
+  const val = document.getElementById('auth-input').value;
+  if (!val) return;
+  const hash = await sha256hex(val);
+  if (hash === _currentProject.password_hash) {
+    setDeviceAuth(_currentProjectId, hash);
+    document.getElementById('auth-input').value = '';
+    await enterProject(_currentProject);
+  } else {
+    const inp = document.getElementById('auth-input');
+    inp.classList.add('error'); inp.value = '';
+    document.getElementById('auth-error').textContent = 'Incorrect password';
+    setTimeout(() => { inp.classList.remove('error'); document.getElementById('auth-error').textContent = ''; }, 1500);
+  }
+}
+
+async function enterProject(project) {
+  // Load config into state
+  state.reels    = project.reels    || ['R1','R2','R3','R4','R5','R6'];
+  state.tags     = project.tags     || [];
+  state.statuses = project.statuses || JSON.parse(JSON.stringify(DEFAULT_STATUSES));
+
+  // Restore per-device prefs
+  const prefs = getPrefs();
+  state.view = prefs.view || 'glance';
+  state.sort = prefs.sort || { col: 'reel', dir: 1 };
+  _filter    = prefs.filter || 'all';
+
+  // Load scenes
+  document.getElementById('loading-text').textContent = 'Loading scenes…';
+  const { data: scenes, error: sErr } = await sb.from('st_scenes')
+    .select('*').eq('project_id', project.id).order('created_at');
+  if (sErr) { showToast('Scene load error', 'error'); }
+  else state.scenes = (scenes || []).map(dbRowToScene);
+
+  // Load recent activity
+  const { data: acts } = await sb.from('st_activity')
+    .select('*').eq('project_id', project.id)
+    .order('changed_at', { ascending: false }).limit(80);
+  _activities = acts || [];
+
+  // Save to recent list
+  saveRecentProject(project.id, project.name);
+
+  // Show app
+  document.getElementById('project-display-name').textContent = project.name || '';
+  document.getElementById('ps-project-id').textContent = project.id;
+
+  subscribeRealtime();
+  showScreen('app');
+  setView(state.view, false);
+  render();
+  renderActivityPanel();
+}
+
+function showSetupScreen() {
+  document.getElementById('setup-sql-text').textContent = MIGRATION_SQL;
+  showScreen('setup');
+}
+
+function setupCopySQL() {
+  navigator.clipboard.writeText(MIGRATION_SQL)
+    .then(() => showToast('SQL copied!'))
+    .catch(() => showToast('Copy failed', 'error'));
+}
+
+function copyShareLink() {
+  const url = `https://scene-tracker.dftf.io?p=${_currentProjectId}`;
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('Link copied!'))
+    .catch(() => {
+      // Fallback: select from a temp input
+      const inp = document.createElement('input');
+      inp.value = url; document.body.appendChild(inp);
+      inp.select(); document.execCommand('copy');
+      inp.remove(); showToast('Link copied!');
+    });
+}
+
+// ── Activity Panel ────────────────────────────────────────────────────────────
+
+function toggleActivityPanel() {
+  _activityOpen = !_activityOpen;
+  document.getElementById('activity-panel').classList.toggle('open', _activityOpen);
+  document.getElementById('btn-activity').classList.toggle('btn-active', _activityOpen);
+}
+
+function relativeTime(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return days === 1 ? 'yesterday' : `${days}d ago`;
+}
+
+function renderActivityPanel() {
+  const list = document.getElementById('activity-list');
+  if (!list) return;
+  if (_activities.length === 0) {
+    list.innerHTML = '<div class="activity-empty">No activity yet</div>';
+    return;
+  }
+  list.innerHTML = _activities.map(a => {
+    const oldSt = state.statuses.find(s => s.key === a.old_status);
+    const newSt = state.statuses.find(s => s.key === a.new_status);
+    const oldLabel = oldSt?.label || a.old_status || '—';
+    const newLabel = newSt?.label || a.new_status || '—';
+    const newColor = newSt?.color || '#999';
+    const num  = a.scene_number ? padSceneNum(a.scene_number) : '';
+    const name = a.scene_name || '';
+    return `<div class="activity-entry">
+      <div class="activity-scene-line">
+        ${num ? `<span class="activity-num">${esc(num)}</span>` : ''}
+        ${name ? `<span class="activity-name">${esc(name)}</span>` : ''}
+      </div>
+      <div class="activity-change">
+        <span class="activity-from">${esc(oldLabel)}</span>
+        <span class="activity-arrow">→</span>
+        <span class="activity-to" style="color:${newColor}">${esc(newLabel)}</span>
+      </div>
+      <div class="activity-time">${relativeTime(a.changed_at)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+
+function setFilter(key) {
+  _filter = key;
+  savePrefs({ filter: key });
+  renderFilter();
+  render();
+}
+
+function filteredScenes() {
+  if (!_filter || _filter === 'all') return state.scenes;
+  return state.scenes.filter(s => s.status === _filter);
+}
+
+function renderFilter() {
+  const el = document.getElementById('filter-bar');
+  if (!el) return;
+  const counts = {};
+  state.scenes.forEach(sc => { counts[sc.status] = (counts[sc.status] || 0) + 1; });
+
+  let html = `<button class="filter-btn${_filter === 'all' ? ' active' : ''}" onclick="setFilter('all')">All <span class="filter-count">${state.scenes.length}</span></button>`;
+  state.statuses.forEach(s => {
+    const cnt = counts[s.key] || 0;
+    if (cnt > 0) {
+      const isActive = _filter === s.key;
+      html += `<button class="filter-btn${isActive ? ' active' : ''}"
+        style="${isActive ? `background:${s.bg};border-color:${s.color}55;color:${s.color}` : ''}"
+        onclick="setFilter('${s.key}')">
+        <span class="filter-dot" style="background:${s.color}"></span>${esc(s.label)} <span class="filter-count">${cnt}</span>
+      </button>`;
+    }
+  });
+  el.innerHTML = html;
+}
+
+// ── Group color ───────────────────────────────────────────────────────────────
+
+function groupColorFor(name) {
+  if (!name) return null;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = ((hash * 31) + name.charCodeAt(i)) >>> 0;
+  return TAG_PALETTE[hash % TAG_PALETTE.length];
+}
+
+function updateGroupPreview() {
+  const name = document.getElementById('scene-group').value.trim();
+  const preview = document.getElementById('group-color-preview');
+  if (!name) { preview.style.display = 'none'; return; }
+  const color = groupColorFor(name);
+  document.getElementById('group-color-dot').style.background = color;
+  document.getElementById('group-color-label').textContent = `Group color: ${name}`;
+  preview.style.display = 'flex';
+}
+
+function populateGroupDatalist() {
+  const names = [...new Set(state.scenes.map(s => s.group_id).filter(Boolean))];
+  document.getElementById('group-datalist').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
+}
+
+// ── Project Settings ──────────────────────────────────────────────────────────
+
+function showProjectSettings() {
+  document.getElementById('ps-name').value = _currentProject?.name || '';
+  document.getElementById('ps-pwd').value = '';
+  document.getElementById('ps-pwd-confirm').value = '';
+  document.getElementById('ps-error').style.display = 'none';
+  document.getElementById('project-settings-overlay').classList.remove('hidden');
+}
+function closeProjectSettings() { document.getElementById('project-settings-overlay').classList.add('hidden'); }
+
+async function saveProjectSettings() {
+  const name    = document.getElementById('ps-name').value.trim() || 'Untitled Project';
+  const pwd     = document.getElementById('ps-pwd').value;
+  const confirm = document.getElementById('ps-pwd-confirm').value;
+  const errEl   = document.getElementById('ps-error');
+  errEl.style.display = 'none';
+
+  if (pwd && pwd !== confirm) {
+    errEl.textContent = 'Passwords do not match';
+    errEl.style.display = '';
+    return;
+  }
+
+  const update = { name, updated_at: new Date().toISOString() };
+  if (pwd) {
+    update.password_hash = await sha256hex(pwd);
+    setDeviceAuth(_currentProjectId, update.password_hash);
+  }
+
+  const { error } = await sb.from('st_projects').update(update).eq('id', _currentProjectId);
+  if (error) { errEl.textContent = error.message; errEl.style.display = ''; return; }
+
+  _currentProject = { ..._currentProject, ...update };
+  document.getElementById('project-display-name').textContent = name;
+  saveRecentProject(_currentProjectId, name);
+  closeProjectSettings();
+  showToast('Project settings saved');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 7); }
+
+function statusFor(key) {
+  return state.statuses.find(s => s.key === key) || state.statuses.find(s => s.key === 'todo') || state.statuses[0];
+}
+function tagFor(id) { return state.tags.find(t => t.id === id); }
+
+function padSceneNum(val) {
+  if (!val) return val;
+  const t = String(val).trim();
+  if (/^\d+$/.test(t)) return t.padStart(3, '0');
+  return t;
+}
+
+function getNextReelNumber(reel) {
+  const nums = state.scenes.filter(s => s.reel === reel).map(s => parseInt(s.number, 10)).filter(n => !isNaN(n));
+  return String((nums.length > 0 ? Math.max(...nums) : 0) + 1).padStart(3, '0');
+}
+
+function badge(statusKey, clickable, sceneId) {
+  const s = statusFor(statusKey);
+  const cls = clickable ? ' clickable' : '';
+  const onclick = clickable ? `onclick="event.stopPropagation();openInlineStatusPicker(event,this,'${sceneId}')"` : '';
+  return `<span class="badge${cls}" style="color:${s.color};background:${s.bg}" ${onclick}>${esc(s.label)}</span>`;
+}
+
+function tagChip(tagId) {
+  const t = tagFor(tagId);
+  if (!t) return '';
+  return `<span class="tag-chip" style="color:${t.color};background:${t.color}22;border-color:${t.color}44">${esc(t.label)}</span>`;
+}
+function tagDot(tagId) {
+  const t = tagFor(tagId);
+  if (!t) return '';
+  return `<span class="tag-dot" style="background:${t.color}" title="${esc(t.label)}"></span>`;
+}
+
+function esc(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function handleOverlayClick(e, id) {
+  if (e.target === document.getElementById(id)) {
+    ({
+      'scene-modal-overlay':      closeSceneModal,
+      'reel-modal-overlay':       closeReelModal,
+      'tag-modal-overlay':        closeTagModal,
+      'status-mgr-overlay':       closeStatusMgrModal,
+      'import-modal-overlay':     closeImportModal,
+      'project-settings-overlay': closeProjectSettings,
+    })[id]?.();
+  }
+}
+
+let _toastTimer;
+function showToast(msg, type) {
+  clearTimeout(_toastTimer);
+  document.querySelector('.toast')?.remove();
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'error' ? ' error' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  _toastTimer = setTimeout(() => el.remove(), 3000);
+}
+
+
+// ── Custom Dropdown (Picker) ──────────────────────────────────────────────────
+
+let _pickerMeta       = null;
+let _tagPickerSceneId  = null;
+let _tagPickerAnchorEl = null;
+
+function Picker_close() {
+  const panel = document.getElementById('cd-panel');
+  panel.style.display = 'none'; panel.innerHTML = '';
+  if (_pickerMeta?.triggerEl) _pickerMeta.triggerEl.classList?.remove('open');
+  _pickerMeta = null; _tagPickerSceneId = null; _tagPickerAnchorEl = null;
+  document.removeEventListener('mousedown', Picker_outsideHandler, true);
+}
+
+function Picker_outsideHandler(e) {
+  const panel = document.getElementById('cd-panel');
+  const trigger = _pickerMeta?.triggerEl;
+  if (!panel.contains(e.target) && e.target !== trigger && !trigger?.contains(e.target)) Picker_close();
+}
+
+function Picker_open(anchorEl, options, onSelect, selectedValue) {
+  Picker_close();
+  const panel = document.getElementById('cd-panel');
+  panel.className = 'cd-panel';
+  options.forEach(opt => {
     const el = document.createElement('div');
-    el.className = 'toast' + (type === 'error' ? ' error' : '');
-    el.textContent = msg;
-    document.body.appendChild(el);
-    _toastTimer = setTimeout(() => el.remove(), 3000);
+    el.className = 'cd-option' + (opt.value === selectedValue ? ' active' : '');
+    el.innerHTML = `${opt.color ? `<span class="cd-option-dot" style="background:${opt.color}"></span>` : ''}
+      <span class="cd-option-label">${esc(opt.label)}</span>
+      ${opt.value === selectedValue ? '<span class="cd-option-check">✓</span>' : ''}`;
+    el.onclick = e => { e.stopPropagation(); onSelect(opt.value, opt); Picker_close(); };
+    panel.appendChild(el);
+  });
+  if (anchorEl) anchorEl.classList?.add('open');
+  _pickerMeta = { triggerEl: anchorEl };
+  panel.style.display = 'block';
+  const rect = anchorEl.getBoundingClientRect();
+  const panelH = Math.min(320, options.length * 38 + 8);
+  const spaceBelow = window.innerHeight - rect.bottom - 8;
+  panel.style.left = rect.left + 'px';
+  panel.style.minWidth = rect.width + 'px';
+  if (spaceBelow >= panelH || spaceBelow >= rect.top - 8) {
+    panel.style.top = (rect.bottom + 4) + 'px'; panel.style.bottom = '';
+  } else {
+    panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px'; panel.style.top = '';
   }
+  setTimeout(() => document.addEventListener('mousedown', Picker_outsideHandler, true), 0);
+}
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Custom Dropdown (Picker)
-  // ────────────────────────────────────────────────────────────────────────────
+function openStatusPicker(triggerEl) {
+  const opts = state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color }));
+  Picker_open(triggerEl, opts, (key, s) => {
+    document.getElementById('scene-status').value = key;
+    document.getElementById('status-cd-label').textContent = s.label;
+    document.getElementById('status-cd-dot').style.background = s.color;
+  }, document.getElementById('scene-status').value);
+}
 
-  let _pickerMeta      = null;
-  let _tagPickerSceneId = null;
-  let _tagPickerAnchorEl = null;
+function openReelPicker(triggerEl) {
+  const opts = state.reels.map(r => ({ value: r, label: r, color: null }));
+  Picker_open(triggerEl, opts, reel => {
+    document.getElementById('scene-reel').value = reel;
+    document.getElementById('reel-cd-label').textContent = reel;
+  }, document.getElementById('scene-reel').value);
+}
 
-  function Picker_close() {
-    const panel = document.getElementById('cd-panel');
-    panel.style.display = 'none';
-    panel.innerHTML = '';
-    if (_pickerMeta?.triggerEl) _pickerMeta.triggerEl.classList?.remove('open');
-    _pickerMeta       = null;
-    _tagPickerSceneId  = null;
-    _tagPickerAnchorEl = null;
-    document.removeEventListener('mousedown', Picker_outsideHandler, true);
+function openInlineStatusPicker(event, badgeEl, sceneId) {
+  const opts = state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color }));
+  const sc = state.scenes.find(s => s.id === sceneId);
+  if (!sc) return;
+  const oldStatus = sc.status;
+  Picker_open(badgeEl, opts, key => {
+    const prev = sc.status;
+    sc.status = key;
+    upsertScene(sc);
+    logActivity(sc.id, sc.number, sc.name, prev, key);
+    render();
+  }, sc.status);
+}
+
+function openInlineReelPicker(event, reelEl, sceneId) {
+  const opts = state.reels.map(r => ({ value: r, label: r, color: null }));
+  const sc = state.scenes.find(s => s.id === sceneId);
+  if (!sc) return;
+  Picker_open(reelEl, opts, reel => {
+    sc.reel = reel;
+    upsertScene(sc);
+    render();
+  }, sc.reel);
+}
+
+// ── Inline Tag Picker ─────────────────────────────────────────────────────────
+
+function openInlineTagPicker(event, anchorEl, sceneId) {
+  event.stopPropagation();
+  if (_tagPickerSceneId === sceneId) { Picker_close(); return; }
+  Picker_close();
+  _tagPickerSceneId = sceneId; _tagPickerAnchorEl = anchorEl;
+  _pickerMeta = { triggerEl: anchorEl };
+  const panel = document.getElementById('cd-panel');
+  panel.className = 'cd-panel';
+  buildTagPickerPanel(panel);
+  panel.style.display = 'block';
+  const rect = anchorEl.getBoundingClientRect();
+  const panelH = Math.min(300, (state.tags.length || 1) * 38 + 48);
+  panel.style.left = rect.left + 'px';
+  panel.style.minWidth = Math.max(180, rect.width) + 'px';
+  if (window.innerHeight - rect.bottom - 8 >= panelH || window.innerHeight - rect.bottom - 8 >= rect.top - 8) {
+    panel.style.top = (rect.bottom + 4) + 'px'; panel.style.bottom = '';
+  } else {
+    panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px'; panel.style.top = '';
   }
+  setTimeout(() => document.addEventListener('mousedown', Picker_outsideHandler, true), 0);
+}
 
-  function Picker_outsideHandler(e) {
-    const panel = document.getElementById('cd-panel');
-    const trigger = _pickerMeta?.triggerEl;
-    if (!panel.contains(e.target) && e.target !== trigger && !trigger?.contains(e.target)) {
-      Picker_close();
-    }
+function buildTagPickerPanel(panelArg) {
+  const panel = panelArg || document.getElementById('cd-panel');
+  const sc = state.scenes.find(s => s.id === _tagPickerSceneId);
+  if (!sc) { Picker_close(); return; }
+  if (state.tags.length === 0) {
+    panel.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:var(--text2)">No tags yet — click Tags to add some</div>`;
+    return;
   }
+  panel.innerHTML = state.tags.map(t => {
+    const sel = (sc.tags || []).includes(t.id);
+    return `<div class="cd-option${sel ? ' active' : ''}" onclick="event.stopPropagation();toggleTagInPicker('${t.id}')">
+      <span class="cd-option-dot" style="background:${t.color}"></span>
+      <span class="cd-option-label">${esc(t.label)}</span>
+      ${sel ? '<span class="cd-option-check">✓</span>' : ''}
+    </div>`;
+  }).join('') + `<div class="cd-divider"></div><div class="cd-action" onclick="event.stopPropagation();Picker_close()">Done</div>`;
+}
 
-  function Picker_open(anchorEl, options, onSelect, selectedValue) {
-    Picker_close();
-    const panel = document.getElementById('cd-panel');
-    panel.className = 'cd-panel';
-
-    options.forEach(opt => {
-      const el = document.createElement('div');
-      el.className = 'cd-option' + (opt.value === selectedValue ? ' active' : '');
-      el.innerHTML = `
-        ${opt.color ? `<span class="cd-option-dot" style="background:${opt.color}"></span>` : ''}
-        <span class="cd-option-label">${esc(opt.label)}</span>
-        ${opt.value === selectedValue ? '<span class="cd-option-check">✓</span>' : ''}
-      `;
-      el.onclick = (e) => { e.stopPropagation(); onSelect(opt.value, opt); Picker_close(); };
-      panel.appendChild(el);
-    });
-
-    if (anchorEl) anchorEl.classList?.add('open');
-    _pickerMeta = { triggerEl: anchorEl };
-
-    panel.style.display = 'block';
-    const rect = anchorEl.getBoundingClientRect();
-    const panelH = Math.min(320, options.length * 38 + 8);
-    const spaceBelow = window.innerHeight - rect.bottom - 8;
-    const spaceAbove = rect.top - 8;
-    panel.style.left     = rect.left + 'px';
-    panel.style.minWidth = rect.width + 'px';
-    if (spaceBelow >= panelH || spaceBelow >= spaceAbove) {
-      panel.style.top    = (rect.bottom + 4) + 'px';
-      panel.style.bottom = '';
-    } else {
-      panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-      panel.style.top    = '';
-    }
-
-    setTimeout(() => document.addEventListener('mousedown', Picker_outsideHandler, true), 0);
+function toggleTagInPicker(tagId) {
+  const sc = state.scenes.find(s => s.id === _tagPickerSceneId);
+  if (!sc) return;
+  const tags = sc.tags || [];
+  sc.tags = tags.includes(tagId) ? tags.filter(id => id !== tagId) : [...tags, tagId];
+  upsertScene(sc);
+  buildTagPickerPanel();
+  if (_tagPickerAnchorEl) {
+    const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
+    _tagPickerAnchorEl.innerHTML = tagHtml || '<span style="color:var(--dim)">—</span>';
   }
+  renderStats();
+}
 
-  // Form pickers
-  function openStatusPicker(triggerEl) {
-    const opts = state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color }));
-    const current = document.getElementById('scene-status').value;
-    Picker_open(triggerEl, opts, (key, s) => {
-      document.getElementById('scene-status').value = key;
-      document.getElementById('status-cd-label').textContent = s.label;
-      document.getElementById('status-cd-dot').style.background = s.color;
-    }, current);
+// ── Inline Editing ────────────────────────────────────────────────────────────
+
+let _inlineCancelled = false;
+
+function startInlineEdit(event, sceneId, field) {
+  event.stopPropagation(); Picker_close();
+  const sc = state.scenes.find(s => s.id === sceneId);
+  if (!sc) return;
+  const td = event.currentTarget;
+  const val = sc[field] || '';
+  const isMono = field === 'number';
+  td.innerHTML = `<input class="inline-edit-input${isMono ? ' mono' : ''}" value="${esc(val)}" data-scene-id="${sceneId}" data-field="${field}" onblur="saveInlineEdit(this)" onkeydown="handleInlineEditKey(event,this)">`;
+  const inp = td.querySelector('input'); inp.focus(); inp.select();
+}
+
+function startInlineEditNotes(event, sceneId) {
+  event.stopPropagation(); Picker_close();
+  const sc = state.scenes.find(s => s.id === sceneId);
+  if (!sc) return;
+  const td = event.currentTarget;
+  td.innerHTML = `<textarea class="inline-edit-textarea" data-scene-id="${sceneId}" data-field="notes" onblur="saveInlineEdit(this)" onkeydown="handleInlineEditKey(event,this)">${esc(sc.notes || '')}</textarea>`;
+  const ta = td.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+
+function handleInlineEditKey(event, el) {
+  if (event.key === 'Enter' && el.tagName === 'INPUT') { event.preventDefault(); el.blur(); }
+  if (event.key === 'Escape') {
+    event.stopPropagation(); event.preventDefault();
+    _inlineCancelled = true; el.blur();
+    setTimeout(() => { _inlineCancelled = false; }, 10);
   }
+}
 
-  function openReelPicker(triggerEl) {
-    const opts = state.reels.map(r => ({ value: r, label: r, color: null }));
-    const current = document.getElementById('scene-reel').value;
-    Picker_open(triggerEl, opts, (reel) => {
-      document.getElementById('scene-reel').value = reel;
-      document.getElementById('reel-cd-label').textContent = reel;
-    }, current);
+function saveInlineEdit(el) {
+  if (_inlineCancelled) { renderList(); return; }
+  const sceneId = el.dataset.sceneId;
+  const field   = el.dataset.field;
+  const sc = state.scenes.find(s => s.id === sceneId);
+  if (!sc) { renderList(); return; }
+  let val = el.value.trim();
+  if (field === 'number') val = padSceneNum(val);
+  sc[field] = val;
+  upsertScene(sc);
+  renderList(); renderStats();
+}
+
+// ── List Quick-add ────────────────────────────────────────────────────────────
+
+function initListQA() {
+  if (!_listQA.reel) _listQA.reel = state.reels[0] || '';
+  if (!_listQA.status) _listQA.status = 'not-received';
+}
+
+function renderListQARow() {
+  initListQA();
+  const autoNum = _listQA.reel ? getNextReelNumber(_listQA.reel) : '001';
+  const st = statusFor(_listQA.status);
+  return `<tr class="list-qa-row">
+    <td><input class="list-qa-input mono" id="lqa-number" placeholder="${autoNum}" style="width:56px" onkeydown="handleListQA(event)"></td>
+    <td colspan="1"><input class="list-qa-input" id="lqa-name" placeholder="+ quick add scene…" onkeydown="handleListQA(event)"></td>
+    <td><span class="reel-tag clickable" id="lqa-reel-btn" onclick="openListQAReelPicker(this)">${esc(_listQA.reel || '—')}</span></td>
+    <td><span class="badge clickable" id="lqa-status-btn" style="color:${st.color};background:${st.bg}" onclick="openListQAStatusPicker(this)">${esc(st.label)}</span></td>
+    <td></td><td></td>
+    <td><button class="btn btn-primary btn-icon btn-sm" onclick="saveListQA()" style="padding:4px 8px;font-size:14px;line-height:1">+</button></td>
+  </tr>`;
+}
+
+function handleListQA(e) {
+  if (e.key === 'Enter') { e.preventDefault(); saveListQA(); }
+  if (e.key === 'Escape') {
+    const n = document.getElementById('lqa-number'); const m = document.getElementById('lqa-name');
+    if (n) n.value = ''; if (m) m.value = '';
   }
+}
 
-  // Inline status pick (clicking badge in glance/list)
-  function openInlineStatusPicker(event, badgeEl, sceneId) {
-    const opts = state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color }));
-    const sc = state.scenes.find(s => s.id === sceneId);
-    if (!sc) return;
-    Picker_open(badgeEl, opts, (key) => {
-      sc.status = key;
-      saveState();
-      render();
-    }, sc.status);
-  }
+function saveListQA() {
+  const numEl = document.getElementById('lqa-number');
+  const nameEl = document.getElementById('lqa-name');
+  const name = nameEl?.value.trim() || '';
+  let number = numEl?.value.trim() || '';
+  if (!name && !number) { nameEl?.focus(); return; }
+  number = number ? padSceneNum(number) : getNextReelNumber(_listQA.reel);
+  const scene = { id: uid(), number, name, reel: _listQA.reel, status: _listQA.status, notes: '', tags: [], group_id: '', group_color: '' };
+  state.scenes.push(scene);
+  upsertScene(scene);
+  renderList(); renderStats();
+  setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
+}
 
-  // Inline reel pick (clicking reel tag in list)
-  function openInlineReelPicker(event, reelEl, sceneId) {
-    const opts = state.reels.map(r => ({ value: r, label: r, color: null }));
-    const sc = state.scenes.find(s => s.id === sceneId);
-    if (!sc) return;
-    Picker_open(reelEl, opts, (reel) => {
-      sc.reel = reel;
-      saveState();
-      render();
-    }, sc.reel);
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Inline Tag Picker (list view multi-select)
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function openInlineTagPicker(event, anchorEl, sceneId) {
-    event.stopPropagation();
-    // If same picker already open, close it
-    if (_tagPickerSceneId === sceneId) { Picker_close(); return; }
-    Picker_close();
-    _tagPickerSceneId  = sceneId;
-    _tagPickerAnchorEl = anchorEl;
-    _pickerMeta        = { triggerEl: anchorEl };
-
-    const panel = document.getElementById('cd-panel');
-    panel.className = 'cd-panel';
-    buildTagPickerPanel(panel);
-
-    panel.style.display = 'block';
-    const rect = anchorEl.getBoundingClientRect();
-    const panelH = Math.min(300, (state.tags.length || 1) * 38 + 48);
-    const spaceBelow = window.innerHeight - rect.bottom - 8;
-    const spaceAbove = rect.top - 8;
-    panel.style.left     = rect.left + 'px';
-    panel.style.minWidth = Math.max(180, rect.width) + 'px';
-    if (spaceBelow >= panelH || spaceBelow >= spaceAbove) {
-      panel.style.top    = (rect.bottom + 4) + 'px';
-      panel.style.bottom = '';
-    } else {
-      panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-      panel.style.top    = '';
-    }
-
-    setTimeout(() => document.addEventListener('mousedown', Picker_outsideHandler, true), 0);
-  }
-
-  function buildTagPickerPanel(panelArg) {
-    const panel = panelArg || document.getElementById('cd-panel');
-    const sc = state.scenes.find(s => s.id === _tagPickerSceneId);
-    if (!sc) { Picker_close(); return; }
-
-    if (state.tags.length === 0) {
-      panel.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:var(--text2)">No tags yet — click Tags to add some</div>`;
-      return;
-    }
-
-    panel.innerHTML = state.tags.map(t => {
-      const selected = (sc.tags || []).includes(t.id);
-      return `<div class="cd-option${selected ? ' active' : ''}"
-        onclick="event.stopPropagation();toggleTagInPicker('${t.id}')">
-        <span class="cd-option-dot" style="background:${t.color}"></span>
-        <span class="cd-option-label">${esc(t.label)}</span>
-        ${selected ? '<span class="cd-option-check">✓</span>' : ''}
-      </div>`;
-    }).join('') + `<div class="cd-divider"></div>
-      <div class="cd-action" onclick="event.stopPropagation();Picker_close()">Done</div>`;
-  }
-
-  function toggleTagInPicker(tagId) {
-    const sc = state.scenes.find(s => s.id === _tagPickerSceneId);
-    if (!sc) return;
-    const tags = sc.tags || [];
-    sc.tags = tags.includes(tagId) ? tags.filter(id => id !== tagId) : [...tags, tagId];
-    saveState();
-    buildTagPickerPanel(); // update panel in-place without closing
-    // Update the tags cell directly without full re-render
-    if (_tagPickerAnchorEl) {
-      const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
-      _tagPickerAnchorEl.innerHTML = tagHtml || '<span style="color:var(--dim)">—</span>';
-    }
-    renderStats(); // update counts
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Inline editing (list view)
-  // ────────────────────────────────────────────────────────────────────────────
-
-  let _inlineCancelled = false;
-
-  function startInlineEdit(event, sceneId, field) {
-    event.stopPropagation();
-    Picker_close();
-    const sc = state.scenes.find(s => s.id === sceneId);
-    if (!sc) return;
-    const td = event.currentTarget;
-    const val = sc[field] || '';
-    const isMono = field === 'number';
-    td.innerHTML = `<input class="inline-edit-input${isMono ? ' mono' : ''}"
-      value="${esc(val)}"
-      data-scene-id="${sceneId}" data-field="${field}"
-      onblur="saveInlineEdit(this)"
-      onkeydown="handleInlineEditKey(event,this)">`;
-    const inp = td.querySelector('input');
-    inp.focus(); inp.select();
-  }
-
-  function startInlineEditNotes(event, sceneId) {
-    event.stopPropagation();
-    Picker_close();
-    const sc = state.scenes.find(s => s.id === sceneId);
-    if (!sc) return;
-    const td = event.currentTarget;
-    td.innerHTML = `<textarea class="inline-edit-textarea"
-      data-scene-id="${sceneId}" data-field="notes"
-      onblur="saveInlineEdit(this)"
-      onkeydown="handleInlineEditKey(event,this)">${esc(sc.notes || '')}</textarea>`;
-    const ta = td.querySelector('textarea');
-    ta.focus();
-    ta.setSelectionRange(ta.value.length, ta.value.length);
-  }
-
-  function handleInlineEditKey(event, el) {
-    if (event.key === 'Enter' && el.tagName === 'INPUT') {
-      event.preventDefault();
-      el.blur();
-    }
-    if (event.key === 'Escape') {
-      event.stopPropagation();
-      event.preventDefault();
-      _inlineCancelled = true;
-      el.blur();
-      setTimeout(() => { _inlineCancelled = false; }, 10);
-    }
-  }
-
-  function saveInlineEdit(el) {
-    if (_inlineCancelled) { renderList(); return; }
-    const sceneId = el.dataset.sceneId;
-    const field   = el.dataset.field;
-    const sc = state.scenes.find(s => s.id === sceneId);
-    if (!sc) { renderList(); return; }
-    let val = el.value.trim();
-    if (field === 'number') val = padSceneNum(val);
-    sc[field] = val;
-    saveState();
-    renderList();
-    renderStats();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // List quick-add
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function initListQA() {
-    if (!_listQA.reel) _listQA.reel = state.reels[0] || '';
-    if (!_listQA.status) _listQA.status = 'not-received';
-  }
-
-  function renderListQARow() {
-    initListQA();
-    const autoNum = _listQA.reel ? getNextReelNumber(_listQA.reel) : '001';
-    const st = statusFor(_listQA.status);
-    return `<tr class="list-qa-row">
-      <td><input class="list-qa-input mono" id="lqa-number" placeholder="${autoNum}" style="width:56px" onkeydown="handleListQA(event)"></td>
-      <td colspan="1"><input class="list-qa-input" id="lqa-name" placeholder="+ quick add scene…" onkeydown="handleListQA(event)"></td>
-      <td><span class="reel-tag clickable" id="lqa-reel-btn" onclick="openListQAReelPicker(this)">${esc(_listQA.reel || '—')}</span></td>
-      <td><span class="badge clickable" id="lqa-status-btn" style="color:${st.color};background:${st.bg}" onclick="openListQAStatusPicker(this)">${esc(st.label)}</span></td>
-      <td></td>
-      <td></td>
-      <td><button class="btn btn-primary btn-icon btn-sm" onclick="saveListQA()" title="Add scene" style="padding:4px 8px;font-size:14px;line-height:1">+</button></td>
-    </tr>`;
-  }
-
-  function handleListQA(e) {
-    if (e.key === 'Enter') { e.preventDefault(); saveListQA(); }
-    if (e.key === 'Escape') {
-      const numEl  = document.getElementById('lqa-number');
-      const nameEl = document.getElementById('lqa-name');
-      if (numEl) numEl.value = '';
-      if (nameEl) nameEl.value = '';
-    }
-  }
-
-  function saveListQA() {
-    const numEl  = document.getElementById('lqa-number');
-    const nameEl = document.getElementById('lqa-name');
-    const name   = nameEl?.value.trim() || '';
-    let   number = numEl?.value.trim()  || '';
-    if (!name && !number) { nameEl?.focus(); return; }
-    number = number ? padSceneNum(number) : getNextReelNumber(_listQA.reel);
-    state.scenes.push({ id: uid(), number, name, reel: _listQA.reel, status: _listQA.status, notes: '', tags: [] });
-    saveState();
-    renderList();
-    renderStats();
+function openListQAReelPicker(el) {
+  Picker_open(el, state.reels.map(r => ({ value: r, label: r, color: null })), reel => {
+    _listQA.reel = reel; renderList();
     setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
-  }
+  }, _listQA.reel);
+}
+function openListQAStatusPicker(el) {
+  Picker_open(el, state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color })), key => {
+    _listQA.status = key; renderList();
+    setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
+  }, _listQA.status);
+}
 
-  function openListQAReelPicker(el) {
-    const opts = state.reels.map(r => ({ value: r, label: r, color: null }));
-    Picker_open(el, opts, (reel) => {
-      _listQA.reel = reel;
-      renderList();
-      setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
-    }, _listQA.reel);
-  }
+// ── Render ────────────────────────────────────────────────────────────────────
 
-  function openListQAStatusPicker(el) {
-    const opts = state.statuses.map(s => ({ value: s.key, label: s.label, color: s.color }));
-    Picker_open(el, opts, (key) => {
-      _listQA.status = key;
-      renderList();
-      setTimeout(() => document.getElementById('lqa-name')?.focus(), 30);
-    }, _listQA.status);
-  }
+function render() {
+  renderStats();
+  renderFilter();
+  if (state.view === 'glance') renderGlance();
+  else renderList();
+}
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Render
-  // ────────────────────────────────────────────────────────────────────────────
+function renderStats() {
+  const counts = {};
+  state.statuses.forEach(s => counts[s.key] = 0);
+  state.scenes.forEach(sc => { counts[sc.status] = (counts[sc.status] || 0) + 1; });
+  const total = state.scenes.length;
 
-  function render() {
-    renderStats();
-    if (state.view === 'glance') renderGlance();
-    else renderList();
-  }
-
-  function renderStats() {
-    const counts = {};
-    state.statuses.forEach(s => counts[s.key] = 0);
-    state.scenes.forEach(sc => {
-      if (counts[sc.status] !== undefined) counts[sc.status]++;
-      else counts[sc.status] = 1;
-    });
-    const total = state.scenes.length;
-
-    // ── Edit 1 Ready featured tracker ──
-    const e1Status  = state.statuses.find(s => s.key === 'complete') || { label: 'Edit 1 Ready', color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)' };
-    const e1Count   = counts['complete'] || 0;
-    const e1Pct     = total > 0 ? Math.round((e1Count / total) * 100) : 0;
-    const trackerEl = document.getElementById('edit1-tracker-slot');
-    if (trackerEl) {
-      trackerEl.innerHTML = `<div class="edit1-tracker">
-        <div class="edit1-top">
-          <span class="edit1-label">Tracking: ${esc(e1Status.label)}</span>
-          <div class="edit1-right">
-            <span class="edit1-count">${e1Count} / ${total} scene${total !== 1 ? 's' : ''}</span>
-            <span class="edit1-pct" style="color:${e1Status.color}">${e1Pct}%</span>
-          </div>
+  const e1Status = state.statuses.find(s => s.key === 'complete') || { label: 'Edit 1 Ready', color: '#6dbf6d', bg: 'rgba(58,107,58,0.20)' };
+  const e1Count  = counts['complete'] || 0;
+  const e1Pct    = total > 0 ? Math.round((e1Count / total) * 100) : 0;
+  const trackerEl = document.getElementById('edit1-tracker-slot');
+  if (trackerEl) {
+    trackerEl.innerHTML = `<div class="edit1-tracker">
+      <div class="edit1-top">
+        <span class="edit1-label">Tracking: ${esc(e1Status.label)}</span>
+        <div class="edit1-right">
+          <span class="edit1-count">${e1Count} / ${total} scene${total !== 1 ? 's' : ''}</span>
+          <span class="edit1-pct" style="color:${e1Status.color}">${e1Pct}%</span>
         </div>
-        <div class="edit1-bar-wrap">
-          <div class="edit1-bar-fill" style="width:${e1Pct}%;background:${e1Status.color}"></div>
-        </div>
+      </div>
+      <div class="edit1-bar-wrap"><div class="edit1-bar-fill" style="width:${e1Pct}%;background:${e1Status.color}"></div></div>
+    </div>`;
+  }
+
+  let html = `<div class="stat-chip"><span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">total</span></div>`;
+  state.statuses.forEach(s => {
+    const cnt = counts[s.key] || 0;
+    if (cnt > 0) {
+      const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
+      html += `<div class="stat-chip">
+        <span class="stat-dot" style="background:${s.color}"></span>
+        <span style="font-weight:600">${cnt}</span>&nbsp;
+        <span style="color:var(--text2)">${esc(s.label)}</span>
+        <span class="stat-mini-bar"><span class="stat-mini-fill" style="width:${pct}%;background:${s.color}"></span></span>
+        <span style="color:var(--dim)">${pct}%</span>
       </div>`;
     }
+  });
+  document.getElementById('stats-bar').innerHTML = html;
+  renderTagLegend();
+}
 
-    // ── Status chips with mini bars ──
-    let html = `<div class="stat-chip"><span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">total</span></div>`;
-    state.statuses.forEach(s => {
-      const cnt = counts[s.key] || 0;
-      if (cnt > 0) {
-        const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
-        html += `<div class="stat-chip">
-          <span class="stat-dot" style="background:${s.color}"></span>
-          <span style="font-weight:600">${cnt}</span>&nbsp;
-          <span style="color:var(--text2)">${esc(s.label)}</span>
-          <span class="stat-mini-bar"><span class="stat-mini-fill" style="width:${pct}%;background:${s.color}"></span></span>
-          <span style="color:var(--dim)">${pct}%</span>
-        </div>`;
-      }
-    });
-    document.getElementById('stats-bar').innerHTML = html;
+function renderTagLegend() {
+  const el = document.getElementById('tag-legend');
+  if (!el) return;
+  if (state.tags.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<span class="tag-legend-label">Tags</span>' +
+    state.tags.map(t => `<span class="tag-legend-item"><span class="tag-dot" style="background:${t.color}"></span><span class="tag-legend-name">${esc(t.label)}</span></span>`).join('');
+}
 
-    renderTagLegend();
+function renderGlance() {
+  const grid = document.getElementById('glance-grid');
+  const scenes = filteredScenes();
+
+  if (state.reels.length === 0 && state.scenes.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">🎬</div><div class="empty-title">Nothing here yet</div>
+      <div class="empty-body">Configure your reels, then start adding scenes</div>
+      <button class="btn btn-primary" onclick="openReelModal()">Configure Reels</button>
+    </div>`; return;
   }
 
-  function renderTagLegend() {
-    const el = document.getElementById('tag-legend');
-    if (!el) return;
-    if (state.tags.length === 0) { el.style.display = 'none'; return; }
-    el.style.display = '';
-    el.innerHTML = '<span class="tag-legend-label">Tags</span>' +
-      state.tags.map(t =>
-        `<span class="tag-legend-item">
-          <span class="tag-dot" style="background:${t.color}"></span>
-          <span class="tag-legend-name">${esc(t.label)}</span>
-        </span>`
-      ).join('');
-  }
+  const focusedReel = document.activeElement?.dataset?.reel || null;
+  let html = '';
 
-  function renderGlance() {
-    const grid = document.getElementById('glance-grid');
-    if (state.reels.length === 0 && state.scenes.length === 0) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">🎬</div>
-        <div class="empty-title">Nothing here yet</div>
-        <div class="empty-body">Configure your reels, then start adding scenes</div>
-        <button class="btn btn-primary" onclick="openReelModal()">Configure Reels</button>
-      </div>`;
-      return;
-    }
+  state.reels.forEach(reel => {
+    const reelScenes = scenes.filter(s => s.reel === reel);
+    const nextNum    = getNextReelNumber(reel);
+    html += `<div class="reel-col">
+      <div class="reel-header">
+        <span class="reel-name">${esc(reel)}</span>
+        <span class="reel-count">${reelScenes.length}</span>
+      </div>
+      <div class="reel-scenes">`;
 
-    const focusedReel = document.activeElement?.dataset?.reel || null;
-    let html = '';
-
-    state.reels.forEach(reel => {
-      const scenes  = state.scenes.filter(s => s.reel === reel);
-      const nextNum = getNextReelNumber(reel);
-      html += `<div class="reel-col">
-        <div class="reel-header">
-          <span class="reel-name">${esc(reel)}</span>
-          <span class="reel-count">${scenes.length}</span>
-        </div>
-        <div class="reel-scenes">`;
-
-      if (scenes.length === 0) {
-        html += `<div style="font-size:11px;color:var(--dim);padding:4px 2px;font-family:'Geist Mono',monospace">—</div>`;
-      } else {
-        scenes.forEach(sc => {
-          const num       = padSceneNum(sc.number) || '—';
-          const hasName   = !!(sc.name && sc.name !== sc.number);
-          const dotHtml   = (sc.tags || []).map(tagDot).filter(Boolean).join('');
-          html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
-            <div class="scene-card-top">
-              <div class="scene-card-main">
-                ${hasName
-                  ? `<span class="scene-card-name-hero">${esc(sc.name)}</span>
-                     <span class="scene-card-number">${esc(num)}</span>`
-                  : `<span class="scene-card-number hero">${esc(num)}</span>`
-                }
-              </div>
-              ${badge(sc.status, true, sc.id)}
-            </div>
-            ${dotHtml ? `<div class="scene-card-footer">${dotHtml}</div>` : ''}
-          </div>`;
-        });
-      }
-
-      html += `</div>
-        <div class="reel-quick-add">
-          <input class="reel-quick-input" placeholder="${nextNum}" data-reel="${esc(reel)}" onkeydown="handleQuickAdd(event)">
-        </div>
-      </div>`;
-    });
-
-    // Unassigned
-    const unassigned = state.scenes.filter(s => !state.reels.includes(s.reel));
-    if (unassigned.length > 0) {
-      html += `<div class="reel-col" style="border-color:rgba(232,107,107,0.3)">
-        <div class="reel-header" style="border-bottom-color:rgba(232,107,107,0.25)">
-          <span class="reel-name" style="color:#e86b6b">Unassigned</span>
-          <span class="reel-count" style="color:#e86b6b">${unassigned.length}</span>
-        </div><div class="reel-scenes">`;
-      unassigned.forEach(sc => {
+    if (reelScenes.length === 0) {
+      html += `<div style="font-size:11px;color:var(--dim);padding:4px 2px;font-family:'Geist Mono',monospace">—</div>`;
+    } else {
+      reelScenes.forEach(sc => {
         const num     = padSceneNum(sc.number) || '—';
         const hasName = !!(sc.name && sc.name !== sc.number);
-        html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
+        const dotHtml = (sc.tags || []).map(tagDot).filter(Boolean).join('');
+        const gc      = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : 'transparent';
+        html += `<div class="scene-card" style="border-left-color:${gc}" onclick="openSceneModal('${sc.id}')">
           <div class="scene-card-top">
             <div class="scene-card-main">
               ${hasName
-                ? `<span class="scene-card-name-hero">${esc(sc.name)}</span>
-                   <span class="scene-card-number">${esc(num)}</span>`
+                ? `<span class="scene-card-number">${esc(num)}</span><span class="scene-card-name-hero">${esc(sc.name)}</span>`
                 : `<span class="scene-card-number hero">${esc(num)}</span>`
               }
             </div>
             ${badge(sc.status, true, sc.id)}
           </div>
+          ${dotHtml ? `<div class="scene-card-footer">${dotHtml}</div>` : ''}
         </div>`;
       });
-      html += `</div></div>`;
     }
 
-    if (state.scenes.length === 0) {
-      html += `<div style="grid-column:1/-1;text-align:center;padding:16px 0 4px">
-        <span style="font-size:12px;color:var(--dim);font-family:'Geist Mono',monospace;letter-spacing:0.06em">
-          Type in any reel column to quick-add, or click <strong style="color:var(--accent)">+ Add Scene</strong>
-        </span>
-      </div>`;
-    }
-
-    grid.innerHTML = html;
-
-    if (focusedReel) {
-      const inp = [...document.querySelectorAll('.reel-quick-input')].find(el => el.dataset.reel === focusedReel);
-      if (inp) inp.focus();
-    }
-  }
-
-  function renderList() {
-    const tbody = document.getElementById('list-body');
-    const tfoot = document.getElementById('list-tfoot');
-
-    if (state.scenes.length === 0) {
-      tbody.innerHTML = `<tr class="no-data-row"><td colspan="7">No scenes yet — click + Add Scene to begin</td></tr>`;
-      renderSortHeaders();
-      if (tfoot) tfoot.innerHTML = renderListQARow();
-      return;
-    }
-
-    const sorted = [...state.scenes].sort((a, b) => {
-      const { col, dir } = state.sort;
-      if (col === 'reel') {
-        const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
-        const diff = ri(a.reel) - ri(b.reel);
-        if (diff !== 0) return diff * dir;
-        return (a.number || a.name || '').localeCompare(b.number || b.name || '', undefined, { numeric: true });
-      }
-      if (col === 'status') {
-        const si = v => state.statuses.findIndex(s => s.key === v);
-        return (si(a.status) - si(b.status)) * dir;
-      }
-      if (col === 'number') return (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }) * dir;
-      return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
-    });
-
-    tbody.innerHTML = sorted.map(sc => {
-      const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
-      const numDisplay  = padSceneNum(sc.number) || '—';
-      return `<tr>
-        <td class="num-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','number')">${esc(numDisplay)}</td>
-        <td class="name-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','name')">${esc(sc.name || '—')}</td>
-        <td><span class="reel-tag clickable" onclick="event.stopPropagation();openInlineReelPicker(event,this,'${sc.id}')">${esc(sc.reel || '—')}</span></td>
-        <td>${badge(sc.status, true, sc.id)}</td>
-        <td class="tags-cell cell-editable" onclick="openInlineTagPicker(event,this,'${sc.id}')">${tagHtml || '<span style="color:var(--dim)">—</span>'}</td>
-        <td class="notes-cell cell-editable" title="${esc(sc.notes)}" onclick="startInlineEditNotes(event,'${sc.id}')">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
-        <td><div class="row-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          </button>
-        </div></td>
-      </tr>`;
-    }).join('');
-
-    if (tfoot) tfoot.innerHTML = renderListQARow();
-    renderSortHeaders();
-  }
-
-  function renderSortHeaders() {
-    ['number','name','reel','status'].forEach(col => {
-      const th = document.getElementById('th-' + col);
-      const sa = document.getElementById('sa-' + col);
-      if (!th || !sa) return;
-      if (state.sort.col === col) { th.classList.add('sorted'); sa.textContent = state.sort.dir === 1 ? '↑' : '↓'; }
-      else { th.classList.remove('sorted'); sa.textContent = ''; }
-    });
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // View / Sort
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function setView(v) {
-    state.view = v;
-    document.getElementById('view-glance').style.display = v === 'glance' ? '' : 'none';
-    document.getElementById('view-list').style.display   = v === 'list'   ? '' : 'none';
-    document.getElementById('btn-glance').classList.toggle('active', v === 'glance');
-    document.getElementById('btn-list').classList.toggle('active',   v === 'list');
-    saveState(); render();
-  }
-
-  function sortBy(col) {
-    if (state.sort.col === col) state.sort.dir = -state.sort.dir;
-    else state.sort = { col, dir: 1 };
-    renderList();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Quick-add (glance)
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function handleQuickAdd(e) {
-    const input = e.target;
-    if (e.key === 'Escape') { input.value = ''; input.blur(); return; }
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    const val  = input.value.trim();
-    const reel = input.dataset.reel;
-    const number = val ? padSceneNum(val) : getNextReelNumber(reel);
-    state.scenes.push({ id: uid(), number, name: '', reel, status: 'not-received', notes: '', tags: [] });
-    saveState();
-    input.value = '';
-    renderGlance(); renderStats();
-    // Restore focus to same reel input
-    setTimeout(() => {
-      const inp = [...document.querySelectorAll('.reel-quick-input')].find(el => el.dataset.reel === reel);
-      if (inp) inp.focus();
-    }, 30);
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Scene Modal
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function openSceneModal(id) {
-    Picker_close();
-    const delBtn = document.getElementById('scene-delete-btn');
-    renderTagsGrid(id ? (state.scenes.find(s => s.id === id)?.tags || []) : []);
-
-    if (id) {
-      const sc = state.scenes.find(s => s.id === id);
-      if (!sc) return;
-      document.getElementById('scene-modal-title').textContent = 'Edit Scene';
-      document.getElementById('scene-id').value     = sc.id;
-      document.getElementById('scene-number').value = padSceneNum(sc.number) || '';
-      document.getElementById('scene-name').value   = sc.name || '';
-      document.getElementById('scene-reel').value   = sc.reel || '';
-      document.getElementById('scene-status').value = sc.status;
-      document.getElementById('scene-notes').value  = sc.notes || '';
-      document.getElementById('reel-cd-label').textContent = sc.reel || '—';
-      const st = statusFor(sc.status);
-      document.getElementById('status-cd-label').textContent = st.label;
-      document.getElementById('status-cd-dot').style.background = st.color;
-      delBtn.style.display = '';
-    } else {
-      document.getElementById('scene-modal-title').textContent = 'Add Scene';
-      document.getElementById('scene-id').value     = '';
-      document.getElementById('scene-number').value = '';
-      document.getElementById('scene-name').value   = '';
-      document.getElementById('scene-reel').value   = state.reels[0] || '';
-      document.getElementById('scene-status').value = 'not-received';
-      document.getElementById('scene-notes').value  = '';
-      document.getElementById('reel-cd-label').textContent = state.reels[0] || '—';
-      const st = statusFor('not-received');
-      document.getElementById('status-cd-label').textContent = st.label;
-      document.getElementById('status-cd-dot').style.background = st.color;
-      delBtn.style.display = 'none';
-    }
-
-    document.getElementById('scene-modal-overlay').classList.remove('hidden');
-    setTimeout(() => document.getElementById('scene-number').focus(), 50);
-  }
-
-  function renderTagsGrid(selectedTags) {
-    const grid = document.getElementById('scene-tags-grid');
-    if (state.tags.length === 0) {
-      grid.innerHTML = `<span class="tag-empty">No tags yet — click "Tags" to create some</span>`;
-      return;
-    }
-    grid.innerHTML = state.tags.map(t => {
-      const sel = selectedTags.includes(t.id);
-      return `<span class="tag-toggle${sel ? ' selected' : ''}"
-        style="color:${t.color};background:${t.color}${sel ? '30' : '18'};border-color:${t.color}${sel ? '66' : '33'}"
-        data-tag-id="${t.id}"
-        onclick="toggleTagInModal('${t.id}')">
-        <span class="tag-toggle-dot" style="background:${t.color}"></span>
-        ${esc(t.label)}
-      </span>`;
-    }).join('');
-  }
-
-  function toggleTagInModal(tagId) {
-    const el = document.querySelector(`.tag-toggle[data-tag-id="${tagId}"]`);
-    if (!el) return;
-    el.classList.toggle('selected');
-    const t = tagFor(tagId);
-    if (!t) return;
-    const sel = el.classList.contains('selected');
-    el.style.background  = `${t.color}${sel ? '30' : '18'}`;
-    el.style.borderColor = `${t.color}${sel ? '66' : '33'}`;
-  }
-
-  function getModalSelectedTags() {
-    return [...document.querySelectorAll('.tag-toggle.selected')].map(el => el.dataset.tagId);
-  }
-
-  function closeSceneModal() {
-    document.getElementById('scene-modal-overlay').classList.add('hidden');
-    Picker_close();
-  }
-
-  function saveScene() {
-    const number = padSceneNum(document.getElementById('scene-number').value.trim());
-    const name   = document.getElementById('scene-name').value.trim();
-    if (!number && !name) {
-      const inp = document.getElementById('scene-number');
-      inp.focus(); inp.style.borderColor = '#e86b6b';
-      setTimeout(() => inp.style.borderColor = '', 1200);
-      return;
-    }
-    const id   = document.getElementById('scene-id').value;
-    const data = {
-      number, name,
-      reel:   document.getElementById('scene-reel').value,
-      status: document.getElementById('scene-status').value,
-      notes:  document.getElementById('scene-notes').value.trim(),
-      tags:   getModalSelectedTags(),
-    };
-    if (id) {
-      const idx = state.scenes.findIndex(s => s.id === id);
-      if (idx >= 0) state.scenes[idx] = { ...state.scenes[idx], ...data };
-    } else {
-      state.scenes.push({ id: uid(), ...data });
-    }
-    saveState(); closeSceneModal(); render();
-  }
-
-  function deleteScene() {
-    const id = document.getElementById('scene-id').value;
-    if (!id || !confirm('Delete this scene?')) return;
-    state.scenes = state.scenes.filter(s => s.id !== id);
-    saveState(); closeSceneModal(); render();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Reel Modal
-  // ────────────────────────────────────────────────────────────────────────────
-
-  let _tempReels = [];
-
-  function openReelModal() {
-    _tempReels = [...state.reels];
-    renderReelMgr();
-    document.getElementById('reel-modal-overlay').classList.remove('hidden');
-  }
-  function closeReelModal() { document.getElementById('reel-modal-overlay').classList.add('hidden'); }
-
-  function renderReelMgr() {
-    const list = document.getElementById('reel-mgr-list');
-    if (_tempReels.length === 0) { list.innerHTML = `<div class="settings-empty">No reels yet</div>`; return; }
-    list.innerHTML = _tempReels.map((r, i) => `
-      <div class="settings-item">
-        <span class="drag-handle">⠿</span>
-        <input class="settings-item-input" value="${esc(r)}" oninput="_tempReels[${i}]=this.value" placeholder="Reel name" style="font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:0.08em">
-        <button class="btn btn-danger btn-icon btn-sm" onclick="removeTempReel(${i})" title="Remove">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>`).join('');
-  }
-
-  function addTempReel() {
-    _tempReels.push(`R${_tempReels.length + 1}`);
-    renderReelMgr();
-    const inputs = document.querySelectorAll('#reel-mgr-list .settings-item-input');
-    if (inputs.length) inputs[inputs.length - 1].focus();
-  }
-
-  function removeTempReel(i) {
-    const name     = _tempReels[i];
-    const affected = state.scenes.filter(s => s.reel === name).length;
-    if (affected > 0 && !confirm(`"${name}" has ${affected} scene(s). Remove anyway?`)) return;
-    _tempReels.splice(i, 1); renderReelMgr();
-  }
-
-  function saveReels() {
-    const inputs = document.querySelectorAll('#reel-mgr-list .settings-item-input');
-    _tempReels = [...inputs].map(el => el.value.trim()).filter(Boolean);
-    state.reels = _tempReels;
-    saveState(); closeReelModal(); render();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Tag Manager
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function openTagModal() {
-    renderTagMgr();
-    renderPalette('new-tag-palette', 'new-tag-color', TAG_PALETTE);
-    document.getElementById('tag-modal-overlay').classList.remove('hidden');
-  }
-  function closeTagModal() { document.getElementById('tag-modal-overlay').classList.add('hidden'); }
-
-  function renderTagMgr() {
-    const list = document.getElementById('tag-mgr-list');
-    if (state.tags.length === 0) { list.innerHTML = `<div class="settings-empty">No tags yet — add one below</div>`; return; }
-    list.innerHTML = state.tags.map((t, i) => `
-      <div class="settings-item">
-        <span class="settings-item-dot" style="background:${t.color}" onclick="cycleTagColor(${i})"></span>
-        <input class="settings-item-input" value="${esc(t.label)}" oninput="state.tags[${i}].label=this.value;saveState();renderTagLegend()">
-        <button class="btn btn-danger btn-icon btn-sm" onclick="removeTag(${i})">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>`).join('');
-  }
-
-  function addTag() {
-    const label = document.getElementById('new-tag-input').value.trim();
-    if (!label) { document.getElementById('new-tag-input').focus(); return; }
-    const color = document.getElementById('new-tag-color').value;
-    state.tags.push({ id: uid(), label, color });
-    saveState();
-    document.getElementById('new-tag-input').value = '';
-    renderTagMgr();
-    renderTagLegend();
-  }
-
-  function removeTag(i) {
-    const tagId = state.tags[i].id;
-    if (!confirm(`Remove tag "${state.tags[i].label}"? It will be removed from all scenes.`)) return;
-    state.tags.splice(i, 1);
-    state.scenes.forEach(sc => { sc.tags = (sc.tags || []).filter(id => id !== tagId); });
-    saveState(); renderTagMgr(); renderTagLegend();
-  }
-
-  function cycleTagColor(i) {
-    const idx = TAG_PALETTE.indexOf(state.tags[i].color);
-    state.tags[i].color = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length];
-    saveState(); renderTagMgr(); renderTagLegend();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Status Manager
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function openStatusMgrModal() {
-    renderStatusMgr();
-    renderPalette('new-status-palette', 'new-status-color', TAG_PALETTE);
-    document.getElementById('status-mgr-overlay').classList.remove('hidden');
-  }
-  function closeStatusMgrModal() { document.getElementById('status-mgr-overlay').classList.add('hidden'); }
-
-  function renderStatusMgr() {
-    const list = document.getElementById('status-mgr-list');
-    list.innerHTML = state.statuses.map((s, i) => `
-      <div class="settings-item">
-        <span class="settings-item-dot" style="background:${s.color}" onclick="cycleStatusColor(${i})"></span>
-        <input class="settings-item-input" value="${esc(s.label)}"
-          oninput="state.statuses[${i}].label=this.value;saveState()">
-        <button class="btn btn-danger btn-icon btn-sm"
-          onclick="removeCustomStatus(${i})"
-          ${s.builtin ? 'style="opacity:0.3;pointer-events:none"' : ''}
-          title="${s.builtin ? 'Built-in (cannot delete)' : 'Remove'}">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>`).join('');
-  }
-
-  function addCustomStatus() {
-    const label = document.getElementById('new-status-input').value.trim();
-    if (!label) { document.getElementById('new-status-input').focus(); return; }
-    const color = document.getElementById('new-status-color').value;
-    const key   = 'custom-' + uid();
-    const bg    = color + '33';
-    state.statuses.push({ key, label, color, bg, builtin: false });
-    saveState();
-    document.getElementById('new-status-input').value = '';
-    renderStatusMgr();
-    showToast(`Status "${label}" added`);
-  }
-
-  function removeCustomStatus(i) {
-    const s = state.statuses[i];
-    if (s.builtin) return;
-    if (!confirm(`Remove status "${s.label}"?`)) return;
-    const key = s.key;
-    state.statuses.splice(i, 1);
-    state.scenes.forEach(sc => { if (sc.status === key) sc.status = 'todo'; });
-    saveState(); renderStatusMgr();
-  }
-
-  function cycleStatusColor(i) {
-    const idx      = TAG_PALETTE.indexOf(state.statuses[i].color);
-    const newColor = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length];
-    state.statuses[i].color = newColor;
-    state.statuses[i].bg    = newColor + '33';
-    saveState(); renderStatusMgr();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Color palette widget
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function renderPalette(containerId, hiddenInputId, colors) {
-    const container = document.getElementById(containerId);
-    const hidden    = document.getElementById(hiddenInputId);
-    const current   = hidden.value;
-    container.innerHTML = colors.map(c => `
-      <span class="color-swatch${c === current ? ' selected' : ''}"
-        style="background:${c}"
-        onclick="selectPaletteColor('${containerId}','${hiddenInputId}','${c}')">
-      </span>`).join('');
-  }
-
-  function selectPaletteColor(containerId, hiddenInputId, color) {
-    document.getElementById(hiddenInputId).value = color;
-    renderPalette(containerId, hiddenInputId, TAG_PALETTE);
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // CSV — Export
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function csvEsc(v) {
-    const s = String(v||'');
-    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g,'""') + '"' : s;
-  }
-
-  function exportCSV() {
-    if (state.scenes.length === 0) { showToast('No scenes to export', 'error'); return; }
-    const rows = [['number','name','reel','status','tags','notes']];
-    state.scenes.forEach(sc => {
-      const tagLabels = (sc.tags||[]).map(id => tagFor(id)?.label || '').filter(Boolean).join(';');
-      rows.push([
-        csvEsc(sc.number||''), csvEsc(sc.name||''), csvEsc(sc.reel||''),
-        csvEsc(statusFor(sc.status).label), csvEsc(tagLabels), csvEsc(sc.notes||''),
-      ]);
-    });
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    const a   = Object.assign(document.createElement('a'), { href: url, download: 'scenes.csv' });
-    a.click(); URL.revokeObjectURL(url);
-    showToast(`Exported ${state.scenes.length} scene(s)`);
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // CSV — Import
-  // ────────────────────────────────────────────────────────────────────────────
-
-  let _pendingImport = null;
-
-  function parseCSVLine(line) {
-    const cells = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-      else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
-      else cur += ch;
-    }
-    cells.push(cur);
-    return cells;
-  }
-
-  function handleCSVFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => parseAndPreviewCSV(ev.target.result);
-    reader.readAsText(file);
-  }
-
-  function parseAndPreviewCSV(text) {
-    const lines = text.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) { showToast('CSV needs header + data rows', 'error'); return; }
-
-    const headers  = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
-    const numIdx   = headers.findIndex(h => ['number','#','scene number','shot'].includes(h));
-    const nameIdx  = headers.findIndex(h => ['name','scene','scene name','description'].includes(h));
-    const reelIdx  = headers.findIndex(h => h === 'reel');
-    const stIdx    = headers.findIndex(h => h === 'status');
-    const notesIdx = headers.findIndex(h => ['notes','note'].includes(h));
-
-    if (numIdx === -1 && nameIdx === -1) {
-      showToast('CSV needs a "number", "name", or "scene" column', 'error');
-      document.getElementById('csv-file-input').value = ''; return;
-    }
-
-    const scenes = []; const newReelSet = new Set();
-
-    for (let i = 1; i < lines.length; i++) {
-      const cells  = parseCSVLine(lines[i]);
-      const number = numIdx  >= 0 ? padSceneNum(cells[numIdx]?.trim()  || '') : '';
-      const name   = nameIdx >= 0 ? (cells[nameIdx]?.trim() || '') : '';
-      if (!number && !name) continue;
-
-      const reel    = reelIdx  >= 0 ? (cells[reelIdx]?.trim()  || '') : '';
-      const stLabel = stIdx    >= 0 ? (cells[stIdx]?.trim()    || '') : '';
-      const notes   = notesIdx >= 0 ? (cells[notesIdx]?.trim() || '') : '';
-
-      let statusKey = 'todo';
-      if (stLabel) {
-        const match = state.statuses.find(s => s.label.toLowerCase() === stLabel.toLowerCase() || s.key === stLabel.toLowerCase());
-        if (match) statusKey = match.key;
-      }
-      if (reel && !state.reels.includes(reel) && !newReelSet.has(reel)) newReelSet.add(reel);
-      scenes.push({ id: uid(), number, name, reel, status: statusKey, notes, tags: [] });
-    }
-
-    if (scenes.length === 0) { showToast('No valid scenes found in CSV', 'error'); document.getElementById('csv-file-input').value = ''; return; }
-
-    _pendingImport = { scenes, newReels: [...newReelSet] };
-    const { newReels } = _pendingImport;
-
-    let body = `<p style="font-size:13px;color:var(--text2);margin-bottom:14px">Ready to import:</p>
-      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:14px">
-        <div>→ <strong>${scenes.length}</strong> scene(s) will be added</div>
-        ${newReels.length > 0 ? `<div>→ <strong>${newReels.length}</strong> new reel(s): ${newReels.map(r=>`<span class="reel-tag">${esc(r)}</span>`).join(' ')}</div>` : ''}
+    html += `</div>
+      <div class="reel-quick-add">
+        <input class="reel-quick-input" placeholder="${nextNum}" data-reel="${esc(reel)}" onkeydown="handleQuickAdd(event)">
       </div>
-      <div class="import-preview"><table>
-        <thead><tr><th>#</th><th>Name</th><th>Reel</th><th>Status</th></tr></thead>
-        <tbody>
-          ${scenes.slice(0,25).map(sc=>`<tr>
-            <td style="font-family:'Geist Mono',monospace">${esc(sc.number||'—')}</td>
-            <td>${esc(sc.name||'—')}</td>
-            <td>${esc(sc.reel||'—')}</td>
-            <td>${badge(sc.status)}</td>
-          </tr>`).join('')}
-          ${scenes.length>25?`<tr><td colspan="4" style="text-align:center;padding:8px;color:var(--dim)">…and ${scenes.length-25} more</td></tr>`:''}
-        </tbody>
-      </table></div>`;
-
-    document.getElementById('import-modal-body').innerHTML = body;
-    document.getElementById('import-modal-overlay').classList.remove('hidden');
-  }
-
-  function confirmImport() {
-    if (!_pendingImport) return;
-    const { scenes, newReels } = _pendingImport;
-    newReels.forEach(r => state.reels.push(r));
-    state.scenes = [...state.scenes, ...scenes];
-    saveState(); closeImportModal(); render();
-    showToast(`Imported ${scenes.length} scene(s)${newReels.length ? ` + ${newReels.length} reel(s)` : ''}`);
-    _pendingImport = null;
-  }
-
-  function closeImportModal() {
-    document.getElementById('import-modal-overlay').classList.add('hidden');
-    document.getElementById('csv-file-input').value = '';
-    _pendingImport = null;
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Password / Auth
-  // ────────────────────────────────────────────────────────────────────────────
-
-  function getPwd() { return localStorage.getItem(PWD_KEY) || ''; }
-  function authToken(p) { return btoa('dftf_st:' + p + ':auth_v1'); }
-  function isDeviceAuthed() { const p = getPwd(); return !p || localStorage.getItem(AUTH_KEY) === authToken(p); }
-  function setDeviceAuthed(p) { localStorage.setItem(AUTH_KEY, authToken(p)); }
-
-  function tryLogin() {
-    const entered = document.getElementById('pwd-input').value;
-    if (entered === getPwd()) {
-      setDeviceAuthed(getPwd());
-      document.getElementById('pwd-screen').classList.add('hidden');
-      document.getElementById('pwd-input').value = '';
-    } else {
-      const inp = document.getElementById('pwd-input');
-      inp.classList.add('error'); inp.value = '';
-      document.getElementById('pwd-error').textContent = 'Incorrect password';
-      setTimeout(() => { inp.classList.remove('error'); document.getElementById('pwd-error').textContent = ''; }, 1500);
-    }
-  }
-
-  function openPwdSettings() {
-    const hasPwd = !!getPwd();
-    document.getElementById('pwd-current-group').style.display = hasPwd ? '' : 'none';
-    ['pwd-current','pwd-new','pwd-confirm'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('pwd-settings-error').style.display = 'none';
-    document.getElementById('pwd-settings-overlay').classList.remove('hidden');
-  }
-  function closePwdSettings() { document.getElementById('pwd-settings-overlay').classList.add('hidden'); }
-
-  function savePwdSettings() {
-    const errEl   = document.getElementById('pwd-settings-error');
-    const hasPwd  = !!getPwd();
-    const current = document.getElementById('pwd-current').value;
-    const newPwd  = document.getElementById('pwd-new').value;
-    const confirm = document.getElementById('pwd-confirm').value;
-    errEl.style.display = 'none';
-    if (hasPwd && current !== getPwd()) { errEl.textContent = 'Current password is incorrect'; errEl.style.display = ''; return; }
-    if (newPwd && newPwd !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.style.display = ''; return; }
-    if (newPwd) { localStorage.setItem(PWD_KEY, newPwd); setDeviceAuthed(newPwd); showToast('Password set — this device is remembered'); }
-    else { localStorage.removeItem(PWD_KEY); localStorage.removeItem(AUTH_KEY); showToast('Password removed'); }
-    closePwdSettings();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Keyboard
-  // ────────────────────────────────────────────────────────────────────────────
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      Picker_close();
-      ['scene-modal-overlay','reel-modal-overlay','tag-modal-overlay',
-       'status-mgr-overlay','import-modal-overlay','pwd-settings-overlay']
-        .forEach(id => document.getElementById(id).classList.add('hidden'));
-    }
-    if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.tagName !== 'TEXTAREA') {
-      if (!document.getElementById('scene-modal-overlay').classList.contains('hidden')) saveScene();
-      else if (!document.getElementById('import-modal-overlay').classList.contains('hidden')) confirmImport();
-    }
+    </div>`;
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Init
-  // ────────────────────────────────────────────────────────────────────────────
-
-  loadState();
-  if (!isDeviceAuthed()) {
-    document.getElementById('pwd-screen').classList.remove('hidden');
-    setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+  // Unassigned
+  const unassigned = scenes.filter(s => !state.reels.includes(s.reel));
+  if (unassigned.length > 0) {
+    html += `<div class="reel-col" style="border-color:rgba(232,107,107,0.3)">
+      <div class="reel-header" style="border-bottom-color:rgba(232,107,107,0.25)">
+        <span class="reel-name" style="color:#e86b6b">Unassigned</span>
+        <span class="reel-count" style="color:#e86b6b">${unassigned.length}</span>
+      </div><div class="reel-scenes">`;
+    unassigned.forEach(sc => {
+      const num = padSceneNum(sc.number) || '—'; const hasName = !!(sc.name && sc.name !== sc.number);
+      const gc  = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : 'transparent';
+      html += `<div class="scene-card" style="border-left-color:${gc}" onclick="openSceneModal('${sc.id}')">
+        <div class="scene-card-top">
+          <div class="scene-card-main">
+            ${hasName
+              ? `<span class="scene-card-number">${esc(num)}</span><span class="scene-card-name-hero">${esc(sc.name)}</span>`
+              : `<span class="scene-card-number hero">${esc(num)}</span>`
+            }
+          </div>
+          ${badge(sc.status, true, sc.id)}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
   }
-  setView(state.view || 'glance');
-  </script>
+
+  if (state.scenes.length === 0) {
+    html += `<div style="grid-column:1/-1;text-align:center;padding:16px 0 4px">
+      <span style="font-size:12px;color:var(--dim);font-family:'Geist Mono',monospace;letter-spacing:0.06em">
+        Type in any reel column to quick-add, or click <strong style="color:var(--accent)">+ Add Scene</strong>
+      </span></div>`;
+  }
+
+  grid.innerHTML = html;
+  if (focusedReel) {
+    const inp = [...document.querySelectorAll('.reel-quick-input')].find(el => el.dataset.reel === focusedReel);
+    if (inp) inp.focus();
+  }
+}
+
+function renderList() {
+  const tbody = document.getElementById('list-body');
+  const tfoot = document.getElementById('list-tfoot');
+  const scenes = filteredScenes();
+
+  if (scenes.length === 0) {
+    tbody.innerHTML = `<tr class="no-data-row"><td colspan="7">${state.scenes.length > 0 ? 'No scenes match the current filter' : 'No scenes yet — click + Add Scene to begin'}</td></tr>`;
+    renderSortHeaders();
+    if (tfoot) tfoot.innerHTML = renderListQARow();
+    return;
+  }
+
+  const sorted = [...scenes].sort((a, b) => {
+    const { col, dir } = state.sort;
+    if (col === 'reel') {
+      const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
+      const diff = ri(a.reel) - ri(b.reel);
+      if (diff !== 0) return diff * dir;
+      return (a.number || a.name || '').localeCompare(b.number || b.name || '', undefined, { numeric: true });
+    }
+    if (col === 'status') return (state.statuses.findIndex(s => s.key === a.status) - state.statuses.findIndex(s => s.key === b.status)) * dir;
+    if (col === 'number') return (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }) * dir;
+    return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
+  });
+
+  tbody.innerHTML = sorted.map(sc => {
+    const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
+    const num = padSceneNum(sc.number) || '—';
+    const gc  = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : null;
+    const groupStyle = gc ? `border-left: 3px solid ${gc};` : '';
+    return `<tr style="${groupStyle}">
+      <td class="num-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','number')">${esc(num)}</td>
+      <td class="name-cell cell-editable" onclick="startInlineEdit(event,'${sc.id}','name')">${esc(sc.name || '—')}</td>
+      <td><span class="reel-tag clickable" onclick="event.stopPropagation();openInlineReelPicker(event,this,'${sc.id}')">${esc(sc.reel || '—')}</span></td>
+      <td>${badge(sc.status, true, sc.id)}</td>
+      <td class="tags-cell cell-editable" onclick="openInlineTagPicker(event,this,'${sc.id}')">${tagHtml || '<span style="color:var(--dim)">—</span>'}</td>
+      <td class="notes-cell cell-editable" title="${esc(sc.notes)}" onclick="startInlineEditNotes(event,'${sc.id}')">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  if (tfoot) tfoot.innerHTML = renderListQARow();
+  renderSortHeaders();
+}
+
+function renderSortHeaders() {
+  ['number','name','reel','status'].forEach(col => {
+    const th = document.getElementById('th-' + col);
+    const sa = document.getElementById('sa-' + col);
+    if (!th || !sa) return;
+    if (state.sort.col === col) { th.classList.add('sorted'); sa.textContent = state.sort.dir === 1 ? '↑' : '↓'; }
+    else { th.classList.remove('sorted'); sa.textContent = ''; }
+  });
+}
+
+// ── View / Sort ───────────────────────────────────────────────────────────────
+
+function setView(v, save = true) {
+  state.view = v;
+  document.getElementById('view-glance').style.display = v === 'glance' ? '' : 'none';
+  document.getElementById('view-list').style.display   = v === 'list'   ? '' : 'none';
+  document.getElementById('btn-glance').classList.toggle('active', v === 'glance');
+  document.getElementById('btn-list').classList.toggle('active',   v === 'list');
+  if (save) savePrefs({ view: v });
+  render();
+}
+
+function sortBy(col) {
+  if (state.sort.col === col) state.sort.dir = -state.sort.dir;
+  else state.sort = { col, dir: 1 };
+  savePrefs({ sort: state.sort });
+  renderList();
+}
+
+// ── Quick-add (glance) ────────────────────────────────────────────────────────
+
+function handleQuickAdd(e) {
+  const input = e.target;
+  if (e.key === 'Escape') { input.value = ''; input.blur(); return; }
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const reel   = input.dataset.reel;
+  const number = input.value.trim() ? padSceneNum(input.value.trim()) : getNextReelNumber(reel);
+  const scene  = { id: uid(), number, name: '', reel, status: 'not-received', notes: '', tags: [], group_id: '', group_color: '' };
+  state.scenes.push(scene);
+  upsertScene(scene);
+  input.value = '';
+  renderGlance(); renderStats();
+  setTimeout(() => {
+    const inp = [...document.querySelectorAll('.reel-quick-input')].find(el => el.dataset.reel === reel);
+    if (inp) inp.focus();
+  }, 30);
+}
+
+// ── Scene Modal ───────────────────────────────────────────────────────────────
+
+function openSceneModal(id) {
+  Picker_close();
+  populateGroupDatalist();
+  renderTagsGrid(id ? (state.scenes.find(s => s.id === id)?.tags || []) : []);
+  const delBtn = document.getElementById('scene-delete-btn');
+
+  if (id) {
+    const sc = state.scenes.find(s => s.id === id);
+    if (!sc) return;
+    document.getElementById('scene-modal-title').textContent = 'Edit Scene';
+    document.getElementById('scene-id').value        = sc.id;
+    document.getElementById('scene-old-status').value = sc.status;
+    document.getElementById('scene-number').value    = padSceneNum(sc.number) || '';
+    document.getElementById('scene-name').value      = sc.name || '';
+    document.getElementById('scene-reel').value      = sc.reel || '';
+    document.getElementById('scene-status').value    = sc.status;
+    document.getElementById('scene-notes').value     = sc.notes || '';
+    document.getElementById('scene-group').value     = sc.group_id || '';
+    document.getElementById('reel-cd-label').textContent = sc.reel || '—';
+    const st = statusFor(sc.status);
+    document.getElementById('status-cd-label').textContent = st.label;
+    document.getElementById('status-cd-dot').style.background = st.color;
+    delBtn.style.display = '';
+    updateGroupPreview();
+  } else {
+    document.getElementById('scene-modal-title').textContent = 'Add Scene';
+    document.getElementById('scene-id').value        = '';
+    document.getElementById('scene-old-status').value = 'not-received';
+    document.getElementById('scene-number').value    = '';
+    document.getElementById('scene-name').value      = '';
+    document.getElementById('scene-reel').value      = state.reels[0] || '';
+    document.getElementById('scene-status').value    = 'not-received';
+    document.getElementById('scene-notes').value     = '';
+    document.getElementById('scene-group').value     = '';
+    document.getElementById('reel-cd-label').textContent = state.reels[0] || '—';
+    const st = statusFor('not-received');
+    document.getElementById('status-cd-label').textContent = st.label;
+    document.getElementById('status-cd-dot').style.background = st.color;
+    delBtn.style.display = 'none';
+    document.getElementById('group-color-preview').style.display = 'none';
+  }
+
+  document.getElementById('scene-modal-overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('scene-number').focus(), 50);
+}
+
+function renderTagsGrid(selectedTags) {
+  const grid = document.getElementById('scene-tags-grid');
+  if (state.tags.length === 0) { grid.innerHTML = `<span class="tag-empty">No tags yet — click "Tags" to create some</span>`; return; }
+  grid.innerHTML = state.tags.map(t => {
+    const sel = selectedTags.includes(t.id);
+    return `<span class="tag-toggle${sel ? ' selected' : ''}"
+      style="color:${t.color};background:${t.color}${sel ? '30' : '18'};border-color:${t.color}${sel ? '66' : '33'}"
+      data-tag-id="${t.id}" onclick="toggleTagInModal('${t.id}')">
+      <span class="tag-toggle-dot" style="background:${t.color}"></span>${esc(t.label)}
+    </span>`;
+  }).join('');
+}
+
+function toggleTagInModal(tagId) {
+  const el = document.querySelector(`.tag-toggle[data-tag-id="${tagId}"]`);
+  if (!el) return;
+  el.classList.toggle('selected');
+  const t = tagFor(tagId); if (!t) return;
+  const sel = el.classList.contains('selected');
+  el.style.background  = `${t.color}${sel ? '30' : '18'}`;
+  el.style.borderColor = `${t.color}${sel ? '66' : '33'}`;
+}
+
+function getModalSelectedTags() {
+  return [...document.querySelectorAll('.tag-toggle.selected')].map(el => el.dataset.tagId);
+}
+
+function closeSceneModal() {
+  document.getElementById('scene-modal-overlay').classList.add('hidden');
+  Picker_close();
+}
+
+function saveScene() {
+  const number = padSceneNum(document.getElementById('scene-number').value.trim());
+  const name   = document.getElementById('scene-name').value.trim();
+  if (!number && !name) {
+    const inp = document.getElementById('scene-number');
+    inp.focus(); inp.style.borderColor = '#e86b6b';
+    setTimeout(() => inp.style.borderColor = '', 1200); return;
+  }
+  const id        = document.getElementById('scene-id').value;
+  const oldStatus = document.getElementById('scene-old-status').value;
+  const groupName = document.getElementById('scene-group').value.trim();
+  const data = {
+    number, name,
+    reel:        document.getElementById('scene-reel').value,
+    status:      document.getElementById('scene-status').value,
+    notes:       document.getElementById('scene-notes').value.trim(),
+    tags:        getModalSelectedTags(),
+    group_id:    groupName,
+    group_color: groupName ? groupColorFor(groupName) : '',
+  };
+  if (id) {
+    const idx = state.scenes.findIndex(s => s.id === id);
+    if (idx >= 0) { state.scenes[idx] = { ...state.scenes[idx], ...data }; }
+    if (oldStatus !== data.status) logActivity(id, data.number, data.name, oldStatus, data.status);
+    upsertScene(state.scenes.find(s => s.id === id));
+  } else {
+    const scene = { id: uid(), ...data };
+    state.scenes.push(scene);
+    upsertScene(scene);
+  }
+  closeSceneModal(); render();
+}
+
+function deleteScene() {
+  const id = document.getElementById('scene-id').value;
+  if (!id || !confirm('Delete this scene?')) return;
+  state.scenes = state.scenes.filter(s => s.id !== id);
+  deleteSceneDb(id);
+  closeSceneModal(); render();
+}
+
+// ── Reel Modal ────────────────────────────────────────────────────────────────
+
+let _tempReels = [];
+
+function openReelModal() {
+  _tempReels = [...state.reels];
+  renderReelMgr();
+  document.getElementById('reel-modal-overlay').classList.remove('hidden');
+}
+function closeReelModal() { document.getElementById('reel-modal-overlay').classList.add('hidden'); }
+
+function renderReelMgr() {
+  const list = document.getElementById('reel-mgr-list');
+  if (_tempReels.length === 0) { list.innerHTML = `<div class="settings-empty">No reels yet</div>`; return; }
+  list.innerHTML = _tempReels.map((r, i) => `
+    <div class="settings-item">
+      <span class="drag-handle">⠿</span>
+      <input class="settings-item-input" value="${esc(r)}" oninput="_tempReels[${i}]=this.value" placeholder="Reel name" style="font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:0.08em">
+      <button class="btn btn-danger btn-icon btn-sm" onclick="removeTempReel(${i})" title="Remove">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addTempReel() {
+  _tempReels.push(`R${_tempReels.length + 1}`); renderReelMgr();
+  const inputs = document.querySelectorAll('#reel-mgr-list .settings-item-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function removeTempReel(i) {
+  const name = _tempReels[i];
+  const affected = state.scenes.filter(s => s.reel === name).length;
+  if (affected > 0 && !confirm(`"${name}" has ${affected} scene(s). Remove anyway?`)) return;
+  _tempReels.splice(i, 1); renderReelMgr();
+}
+
+function saveReels() {
+  const inputs = document.querySelectorAll('#reel-mgr-list .settings-item-input');
+  _tempReels = [...inputs].map(el => el.value.trim()).filter(Boolean);
+  state.reels = _tempReels;
+  saveProjectConfig();
+  closeReelModal(); render();
+}
+
+// ── Tag Manager ───────────────────────────────────────────────────────────────
+
+function openTagModal() {
+  renderTagMgr();
+  renderPalette('new-tag-palette', 'new-tag-color', TAG_PALETTE);
+  document.getElementById('tag-modal-overlay').classList.remove('hidden');
+}
+function closeTagModal() { document.getElementById('tag-modal-overlay').classList.add('hidden'); }
+
+function renderTagMgr() {
+  const list = document.getElementById('tag-mgr-list');
+  if (state.tags.length === 0) { list.innerHTML = `<div class="settings-empty">No tags yet — add one below</div>`; return; }
+  list.innerHTML = state.tags.map((t, i) => `
+    <div class="settings-item">
+      <span class="settings-item-dot" style="background:${t.color}" onclick="cycleTagColor(${i})"></span>
+      <input class="settings-item-input" value="${esc(t.label)}" oninput="state.tags[${i}].label=this.value;saveProjectConfig();renderTagLegend()">
+      <button class="btn btn-danger btn-icon btn-sm" onclick="removeTag(${i})">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addTag() {
+  const label = document.getElementById('new-tag-input').value.trim();
+  if (!label) { document.getElementById('new-tag-input').focus(); return; }
+  const color = document.getElementById('new-tag-color').value;
+  state.tags.push({ id: uid(), label, color });
+  saveProjectConfig();
+  document.getElementById('new-tag-input').value = '';
+  renderTagMgr(); renderTagLegend();
+}
+
+function removeTag(i) {
+  const tagId = state.tags[i].id;
+  if (!confirm(`Remove tag "${state.tags[i].label}"?`)) return;
+  state.tags.splice(i, 1);
+  state.scenes.forEach(sc => { sc.tags = (sc.tags || []).filter(id => id !== tagId); });
+  saveProjectConfig(); renderTagMgr(); renderTagLegend();
+}
+
+function cycleTagColor(i) {
+  const idx = TAG_PALETTE.indexOf(state.tags[i].color);
+  state.tags[i].color = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length];
+  saveProjectConfig(); renderTagMgr(); renderTagLegend();
+}
+
+// ── Status Manager ────────────────────────────────────────────────────────────
+
+function openStatusMgrModal() {
+  renderStatusMgr();
+  renderPalette('new-status-palette', 'new-status-color', TAG_PALETTE);
+  document.getElementById('status-mgr-overlay').classList.remove('hidden');
+}
+function closeStatusMgrModal() { document.getElementById('status-mgr-overlay').classList.add('hidden'); }
+
+function renderStatusMgr() {
+  const list = document.getElementById('status-mgr-list');
+  list.innerHTML = state.statuses.map((s, i) => `
+    <div class="settings-item">
+      <span class="settings-item-dot" style="background:${s.color}" onclick="cycleStatusColor(${i})"></span>
+      <input class="settings-item-input" value="${esc(s.label)}" oninput="state.statuses[${i}].label=this.value;saveProjectConfig()">
+      <button class="btn btn-danger btn-icon btn-sm" onclick="removeCustomStatus(${i})"
+        ${s.builtin ? 'style="opacity:0.3;pointer-events:none"' : ''} title="${s.builtin ? 'Built-in' : 'Remove'}">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addCustomStatus() {
+  const label = document.getElementById('new-status-input').value.trim();
+  if (!label) { document.getElementById('new-status-input').focus(); return; }
+  const color = document.getElementById('new-status-color').value;
+  state.statuses.push({ key: 'custom-' + uid(), label, color, bg: color + '33', builtin: false });
+  saveProjectConfig();
+  document.getElementById('new-status-input').value = '';
+  renderStatusMgr(); showToast(`Status "${label}" added`);
+}
+
+function removeCustomStatus(i) {
+  const s = state.statuses[i]; if (s.builtin) return;
+  if (!confirm(`Remove status "${s.label}"?`)) return;
+  state.statuses.splice(i, 1);
+  state.scenes.forEach(sc => { if (sc.status === s.key) sc.status = 'todo'; });
+  saveProjectConfig(); renderStatusMgr();
+}
+
+function cycleStatusColor(i) {
+  const idx = TAG_PALETTE.indexOf(state.statuses[i].color);
+  const c   = TAG_PALETTE[(idx + 1) % TAG_PALETTE.length];
+  state.statuses[i].color = c; state.statuses[i].bg = c + '33';
+  saveProjectConfig(); renderStatusMgr();
+}
+
+// ── Color palette widget ──────────────────────────────────────────────────────
+
+function renderPalette(containerId, hiddenInputId, colors) {
+  const container = document.getElementById(containerId);
+  const hidden    = document.getElementById(hiddenInputId);
+  const current   = hidden.value;
+  container.innerHTML = colors.map(c => `
+    <span class="color-swatch${c === current ? ' selected' : ''}" style="background:${c}"
+      onclick="selectPaletteColor('${containerId}','${hiddenInputId}','${c}')"></span>`).join('');
+}
+
+function selectPaletteColor(containerId, hiddenInputId, color) {
+  document.getElementById(hiddenInputId).value = color;
+  renderPalette(containerId, hiddenInputId, TAG_PALETTE);
+}
+
+// ── CSV Export ────────────────────────────────────────────────────────────────
+
+function csvEsc(v) {
+  const s = String(v||'');
+  return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function exportCSV() {
+  if (state.scenes.length === 0) { showToast('No scenes to export', 'error'); return; }
+  const rows = [['number','name','reel','status','tags','notes','group']];
+  state.scenes.forEach(sc => {
+    rows.push([
+      csvEsc(sc.number||''), csvEsc(sc.name||''), csvEsc(sc.reel||''),
+      csvEsc(statusFor(sc.status).label),
+      csvEsc((sc.tags||[]).map(id => tagFor(id)?.label || '').filter(Boolean).join(';')),
+      csvEsc(sc.notes||''), csvEsc(sc.group_id||''),
+    ]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a   = Object.assign(document.createElement('a'), { href: url, download: 'scenes.csv' });
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`Exported ${state.scenes.length} scene(s)`);
+}
+
+// ── CSV Import ────────────────────────────────────────────────────────────────
+
+let _pendingImport = null;
+
+function parseCSVLine(line) {
+  const cells = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+    else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  cells.push(cur); return cells;
+}
+
+function handleCSVFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => parseAndPreviewCSV(ev.target.result);
+  reader.readAsText(file);
+}
+
+function parseAndPreviewCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showToast('CSV needs header + data rows', 'error'); return; }
+  const headers  = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+  const numIdx   = headers.findIndex(h => ['number','#','scene number','shot'].includes(h));
+  const nameIdx  = headers.findIndex(h => ['name','scene','scene name','description'].includes(h));
+  const reelIdx  = headers.findIndex(h => h === 'reel');
+  const stIdx    = headers.findIndex(h => h === 'status');
+  const notesIdx = headers.findIndex(h => ['notes','note'].includes(h));
+  if (numIdx === -1 && nameIdx === -1) { showToast('CSV needs a "number", "name", or "scene" column', 'error'); document.getElementById('csv-file-input').value = ''; return; }
+
+  const scenes = []; const newReelSet = new Set();
+  for (let i = 1; i < lines.length; i++) {
+    const cells  = parseCSVLine(lines[i]);
+    const number = numIdx  >= 0 ? padSceneNum(cells[numIdx]?.trim()  || '') : '';
+    const name   = nameIdx >= 0 ? (cells[nameIdx]?.trim() || '') : '';
+    if (!number && !name) continue;
+    const reel    = reelIdx  >= 0 ? (cells[reelIdx]?.trim()  || '') : '';
+    const stLabel = stIdx    >= 0 ? (cells[stIdx]?.trim()    || '') : '';
+    const notes   = notesIdx >= 0 ? (cells[notesIdx]?.trim() || '') : '';
+    let statusKey = 'not-received';
+    if (stLabel) { const match = state.statuses.find(s => s.label.toLowerCase() === stLabel.toLowerCase() || s.key === stLabel.toLowerCase()); if (match) statusKey = match.key; }
+    if (reel && !state.reels.includes(reel) && !newReelSet.has(reel)) newReelSet.add(reel);
+    scenes.push({ id: uid(), number, name, reel, status: statusKey, notes, tags: [], group_id: '', group_color: '' });
+  }
+
+  if (scenes.length === 0) { showToast('No valid scenes found in CSV', 'error'); document.getElementById('csv-file-input').value = ''; return; }
+  _pendingImport = { scenes, newReels: [...newReelSet] };
+
+  document.getElementById('import-modal-body').innerHTML =
+    `<p style="font-size:13px;color:var(--text2);margin-bottom:14px">Ready to import:</p>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:14px">
+      <div>→ <strong>${scenes.length}</strong> scene(s) will be added</div>
+      ${_pendingImport.newReels.length > 0 ? `<div>→ <strong>${_pendingImport.newReels.length}</strong> new reel(s): ${_pendingImport.newReels.map(r=>`<span class="reel-tag">${esc(r)}</span>`).join(' ')}</div>` : ''}
+    </div>
+    <div class="import-preview"><table>
+      <thead><tr><th>#</th><th>Name</th><th>Reel</th><th>Status</th></tr></thead>
+      <tbody>${scenes.slice(0,25).map(sc=>`<tr>
+        <td style="font-family:'Geist Mono',monospace">${esc(sc.number||'—')}</td>
+        <td>${esc(sc.name||'—')}</td><td>${esc(sc.reel||'—')}</td>
+        <td>${badge(sc.status)}</td>
+      </tr>`).join('')}${scenes.length>25?`<tr><td colspan="4" style="text-align:center;padding:8px;color:var(--dim)">…and ${scenes.length-25} more</td></tr>`:''}</tbody>
+    </table></div>`;
+  document.getElementById('import-modal-overlay').classList.remove('hidden');
+}
+
+async function confirmImport() {
+  if (!_pendingImport) return;
+  const { scenes, newReels } = _pendingImport;
+  newReels.forEach(r => state.reels.push(r));
+  if (newReels.length) saveProjectConfig();
+  for (const scene of scenes) {
+    state.scenes.push(scene);
+    await upsertScene(scene);
+  }
+  closeImportModal(); render();
+  showToast(`Imported ${scenes.length} scene(s)${newReels.length ? ` + ${newReels.length} reel(s)` : ''}`);
+  _pendingImport = null;
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal-overlay').classList.add('hidden');
+  document.getElementById('csv-file-input').value = '';
+  _pendingImport = null;
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    Picker_close();
+    ['scene-modal-overlay','reel-modal-overlay','tag-modal-overlay',
+     'status-mgr-overlay','import-modal-overlay','project-settings-overlay']
+      .forEach(id => document.getElementById(id).classList.add('hidden'));
+  }
+  if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.tagName !== 'TEXTAREA') {
+    if (!document.getElementById('scene-modal-overlay').classList.contains('hidden')) saveScene();
+    else if (!document.getElementById('import-modal-overlay').classList.contains('hidden')) confirmImport();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+initFromUrl();
+
+</script>
 </body>
 </html>
