@@ -319,7 +319,6 @@
     .scene-card {
       padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--bg); cursor: pointer; transition: all 0.12s;
-      border-left-width: 3px;
     }
     .scene-card:hover { border-color: var(--border2); background: var(--surface2); }
     .scene-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
@@ -330,13 +329,14 @@
     .scene-card-footer { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 5px; min-height: 9px; }
 
     /* Quick-add (glance) */
-    .reel-quick-add { padding: 6px 7px 7px; border-top: 1px solid var(--border); }
+    .reel-quick-add { padding: 6px 7px 7px; border-top: 1px solid var(--border); display: flex; gap: 4px; }
     .reel-quick-input {
-      width: 100%; padding: 5px 9px; background: transparent;
+      padding: 5px 9px; background: transparent;
       border: 1px dashed rgba(255,255,255,0.1); border-radius: 4px;
-      color: var(--text); font-family: 'Geist Mono', monospace; font-size: 11px;
-      outline: none; transition: all 0.15s;
+      color: var(--text); font-family: 'Geist', system-ui, sans-serif; font-size: 11px;
+      outline: none; transition: all 0.15s; flex: 1; min-width: 0;
     }
+    .reel-quick-input.qa-num { font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; flex: 0 0 46px; }
     .reel-quick-input::placeholder { color: var(--dim); }
     .reel-quick-input:focus { background: var(--surface2); border-color: var(--accent); border-style: solid; }
 
@@ -1867,8 +1867,8 @@ function renderGlance() {
         const num     = padSceneNum(sc.number) || '—';
         const hasName = !!(sc.name && sc.name !== sc.number);
         const dotHtml = (sc.tags || []).map(tagDot).filter(Boolean).join('');
-        const gc      = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : 'transparent';
-        html += `<div class="scene-card" style="border-left-color:${gc}" onclick="openSceneModal('${sc.id}')">
+        const gc      = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : null;
+        html += `<div class="scene-card" style="${gc ? `border-left: 3px solid ${gc};` : ''}" onclick="openSceneModal('${sc.id}')">
           <div class="scene-card-top">
             <div class="scene-card-main">
               ${hasName
@@ -1885,7 +1885,8 @@ function renderGlance() {
 
     html += `</div>
       <div class="reel-quick-add">
-        <input class="reel-quick-input" placeholder="${nextNum}" data-reel="${esc(reel)}" onkeydown="handleQuickAdd(event)">
+        <input class="reel-quick-input qa-num" placeholder="${nextNum}" data-reel="${esc(reel)}" data-qa-field="num" onkeydown="handleQuickAdd(event)">
+        <input class="reel-quick-input" placeholder="name…" data-reel="${esc(reel)}" data-qa-field="name" onkeydown="handleQuickAdd(event)">
       </div>
     </div>`;
   });
@@ -1900,8 +1901,8 @@ function renderGlance() {
       </div><div class="reel-scenes">`;
     unassigned.forEach(sc => {
       const num = padSceneNum(sc.number) || '—'; const hasName = !!(sc.name && sc.name !== sc.number);
-      const gc  = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : 'transparent';
-      html += `<div class="scene-card" style="border-left-color:${gc}" onclick="openSceneModal('${sc.id}')">
+      const gc  = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : null;
+      html += `<div class="scene-card" style="${gc ? `border-left: 3px solid ${gc};` : ''}" onclick="openSceneModal('${sc.id}')">
         <div class="scene-card-top">
           <div class="scene-card-main">
             ${hasName
@@ -2012,20 +2013,31 @@ function sortBy(col) {
 
 function handleQuickAdd(e) {
   const input = e.target;
-  if (e.key === 'Escape') { input.value = ''; input.blur(); return; }
+  const reel  = input.dataset.reel;
+  const field = input.dataset.qaField;
+  if (e.key === 'Escape') {
+    document.querySelectorAll(`.reel-quick-input[data-reel="${reel}"]`).forEach(i => { i.value = ''; i.blur(); });
+    return;
+  }
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  const reel   = input.dataset.reel;
-  const number = input.value.trim() ? padSceneNum(input.value.trim()) : getNextReelNumber(reel);
-  const scene  = { id: uid(), number, name: '', reel, status: 'not-received', notes: '', tags: [], group_id: '', group_color: '' };
+  if (field === 'num') {
+    document.querySelector(`.reel-quick-input[data-reel="${reel}"][data-qa-field="name"]`)?.focus();
+    return;
+  }
+  const numInp  = document.querySelector(`.reel-quick-input[data-reel="${reel}"][data-qa-field="num"]`);
+  const nameInp = document.querySelector(`.reel-quick-input[data-reel="${reel}"][data-qa-field="name"]`);
+  const numVal  = numInp?.value.trim() || '';
+  const nameVal = nameInp?.value.trim() || '';
+  if (!numVal && !nameVal) { input.focus(); return; }
+  const number = numVal ? padSceneNum(numVal) : getNextReelNumber(reel);
+  const scene  = { id: uid(), number, name: nameVal, reel, status: 'not-received', notes: '', tags: [], group_id: '', group_color: '' };
   state.scenes.push(scene);
   upsertScene(scene);
-  input.value = '';
+  if (numInp)  numInp.value  = '';
+  if (nameInp) nameInp.value = '';
   renderGlance(); renderStats();
-  setTimeout(() => {
-    const inp = [...document.querySelectorAll('.reel-quick-input')].find(el => el.dataset.reel === reel);
-    if (inp) inp.focus();
-  }, 30);
+  setTimeout(() => document.querySelector(`.reel-quick-input[data-reel="${reel}"][data-qa-field="name"]`)?.focus(), 30);
 }
 
 // ── Scene Modal ───────────────────────────────────────────────────────────────
