@@ -312,6 +312,16 @@
     .group-header-row .gh-count { font-weight: 400; color: var(--dim); }
     .group-divider-row > td { padding: 0 !important; height: 12px; border-bottom: none !important; }
 
+    /* ── Glance group labels ── */
+    .reel-group-hdr {
+      display: flex; align-items: center; gap: 4px; padding: 5px 2px 2px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: 'Geist Mono', monospace; color: var(--dim); user-select: none;
+    }
+    .reel-group-hdr:first-child { padding-top: 2px; }
+    .reel-group-sw { width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0; }
+    .reel-group-div { border: none; border-top: 1px solid var(--border); margin: 3px 0 5px; opacity: 0.6; }
+
     /* ── Tag legend ── */
     .tag-legend {
       display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
@@ -1906,12 +1916,13 @@ function renderGlance() {
     if (reelScenes.length === 0) {
       html += `<div style="font-size:11px;color:var(--dim);padding:4px 2px;font-family:'Geist Mono',monospace">—</div>`;
     } else {
-      reelScenes.forEach(sc => {
+      // Render a single scene card
+      const scCard = sc => {
         const num     = padSceneNum(sc.number) || '—';
         const hasName = !!(sc.name && sc.name !== sc.number);
         const dotHtml = (sc.tags || []).map(tagDot).filter(Boolean).join('');
         const gc      = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : null;
-        html += `<div class="scene-card" style="${gc ? `border-left: 3px solid ${gc};` : ''}" onclick="openSceneModal('${sc.id}')">
+        return `<div class="scene-card" style="${gc ? `border-left: 3px solid ${gc};` : ''}" onclick="openSceneModal('${sc.id}')">
           <div class="scene-card-top">
             <div class="scene-card-main">
               ${hasName
@@ -1923,7 +1934,34 @@ function renderGlance() {
           </div>
           ${dotHtml ? `<div class="scene-card-footer">${dotHtml}</div>` : ''}
         </div>`;
+      };
+
+      // Separate grouped vs ungrouped within this reel
+      const reelGroupMap = new Map();
+      const reelUngrouped = [];
+      reelScenes.forEach(sc => {
+        if (sc.group_id) {
+          if (!reelGroupMap.has(sc.group_id)) reelGroupMap.set(sc.group_id, []);
+          reelGroupMap.get(sc.group_id).push(sc);
+        } else {
+          reelUngrouped.push(sc);
+        }
       });
+
+      const sortByNum = arr => [...arr].sort((a,b) => (a.number||'').localeCompare(b.number||'', undefined, {numeric:true}));
+
+      // Render groups
+      [...reelGroupMap.entries()].sort(([a],[b]) => a.localeCompare(b)).forEach(([groupId, gScenes]) => {
+        const gc = gScenes[0].group_color || groupColorFor(groupId);
+        html += `<div class="reel-group-hdr">
+          <span class="reel-group-sw" style="background:${gc}"></span>${esc(groupId)}
+        </div>`;
+        sortByNum(gScenes).forEach(sc => { html += scCard(sc); });
+        html += `<hr class="reel-group-div">`;
+      });
+
+      // Render ungrouped
+      sortByNum(reelUngrouped).forEach(sc => { html += scCard(sc); });
     }
 
     html += `</div>
