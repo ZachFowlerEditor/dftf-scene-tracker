@@ -178,17 +178,25 @@
     }
     .scene-card:hover { border-color: var(--border2); background: var(--surface2); }
     .scene-card-top {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
     }
     .scene-card-main {
-      display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 0; overflow: hidden;
+      display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow: hidden;
     }
+    /* Name is the hero — shown on top, large */
+    .scene-card-name-hero {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3;
+    }
+    /* Number is secondary — small mono label below the name */
     .scene-card-number {
-      font-size: 11px; font-weight: 700; color: var(--text); font-family: 'Geist Mono', monospace;
-      letter-spacing: 0.06em; flex-shrink: 0;
+      font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.08em; line-height: 1.2;
     }
-    .scene-card-name-inline {
-      font-size: 10px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    /* When there's no name, number takes the hero role */
+    .scene-card-number.hero {
+      font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.06em;
+      font-family: 'Geist Mono', monospace;
     }
     .scene-card-footer { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 5px; min-height: 9px; }
 
@@ -545,7 +553,7 @@
             <div class="cd-sel"><div class="cd-sel-dot" id="status-cd-dot"></div><span class="cd-sel-label" id="status-cd-label">To Do</span></div>
             <svg class="cd-caret" width="12" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <input type="hidden" id="scene-status" value="todo">
+          <input type="hidden" id="scene-status" value="not-received">
         </div>
         <div class="form-group">
           <label class="form-label">Tags</label>
@@ -723,7 +731,7 @@
   };
 
   // List quick-add persistent state
-  let _listQA = { reel: '', status: 'todo' };
+  let _listQA = { reel: '', status: 'not-received' };
 
   function loadState() {
     try {
@@ -1090,7 +1098,7 @@
 
   function initListQA() {
     if (!_listQA.reel) _listQA.reel = state.reels[0] || '';
-    if (!_listQA.status) _listQA.status = 'todo';
+    if (!_listQA.status) _listQA.status = 'not-received';
   }
 
   function renderListQARow() {
@@ -1252,14 +1260,17 @@
         html += `<div style="font-size:11px;color:var(--dim);padding:4px 2px;font-family:'Geist Mono',monospace">—</div>`;
       } else {
         scenes.forEach(sc => {
-          const num       = padSceneNum(sc.number) || sc.name || '—';
-          const hasName   = sc.name && sc.name !== sc.number;
+          const num       = padSceneNum(sc.number) || '—';
+          const hasName   = !!(sc.name && sc.name !== sc.number);
           const dotHtml   = (sc.tags || []).map(tagDot).filter(Boolean).join('');
           html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
             <div class="scene-card-top">
               <div class="scene-card-main">
-                <span class="scene-card-number">${esc(num)}</span>
-                ${hasName ? `<span class="scene-card-name-inline">${esc(sc.name)}</span>` : ''}
+                ${hasName
+                  ? `<span class="scene-card-name-hero">${esc(sc.name)}</span>
+                     <span class="scene-card-number">${esc(num)}</span>`
+                  : `<span class="scene-card-number hero">${esc(num)}</span>`
+                }
               </div>
               ${badge(sc.status, true, sc.id)}
             </div>
@@ -1284,12 +1295,16 @@
           <span class="reel-count" style="color:#e86b6b">${unassigned.length}</span>
         </div><div class="reel-scenes">`;
       unassigned.forEach(sc => {
-        const num = padSceneNum(sc.number) || sc.name || '—';
+        const num     = padSceneNum(sc.number) || '—';
+        const hasName = !!(sc.name && sc.name !== sc.number);
         html += `<div class="scene-card" onclick="openSceneModal('${sc.id}')">
           <div class="scene-card-top">
             <div class="scene-card-main">
-              <span class="scene-card-number">${esc(num)}</span>
-              ${sc.name ? `<span class="scene-card-name-inline">${esc(sc.name)}</span>` : ''}
+              ${hasName
+                ? `<span class="scene-card-name-hero">${esc(sc.name)}</span>
+                   <span class="scene-card-number">${esc(num)}</span>`
+                : `<span class="scene-card-number hero">${esc(num)}</span>`
+              }
             </div>
             ${badge(sc.status, true, sc.id)}
           </div>
@@ -1404,7 +1419,7 @@
     const val  = input.value.trim();
     const reel = input.dataset.reel;
     const number = val ? padSceneNum(val) : getNextReelNumber(reel);
-    state.scenes.push({ id: uid(), number, name: '', reel, status: 'todo', notes: '', tags: [] });
+    state.scenes.push({ id: uid(), number, name: '', reel, status: 'not-received', notes: '', tags: [] });
     saveState();
     input.value = '';
     renderGlance(); renderStats();
@@ -1445,10 +1460,10 @@
       document.getElementById('scene-number').value = '';
       document.getElementById('scene-name').value   = '';
       document.getElementById('scene-reel').value   = state.reels[0] || '';
-      document.getElementById('scene-status').value = 'todo';
+      document.getElementById('scene-status').value = 'not-received';
       document.getElementById('scene-notes').value  = '';
       document.getElementById('reel-cd-label').textContent = state.reels[0] || '—';
-      const st = statusFor('todo');
+      const st = statusFor('not-received');
       document.getElementById('status-cd-label').textContent = st.label;
       document.getElementById('status-cd-dot').style.background = st.color;
       delBtn.style.display = 'none';
