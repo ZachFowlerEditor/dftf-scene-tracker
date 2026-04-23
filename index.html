@@ -292,7 +292,8 @@
     /* ── List view: checkboxes & selection bar ── */
     .list-cb-th { width: 28px; padding: 0 4px !important; text-align: center; }
     .list-cb-td { width: 28px; padding: 0 4px !important; text-align: center; vertical-align: middle; }
-    .list-cb { width: 13px; height: 13px; accent-color: var(--accent); cursor: pointer; }
+    .list-cb { width: 13px; height: 13px; accent-color: rgba(255,255,255,0.35); cursor: pointer; opacity: 0.55; transition: opacity 0.1s; }
+    .list-cb:hover, .list-cb:checked { opacity: 1; }
     .list-row-selected > td { background: rgba(255,224,102,0.05); }
     .sel-bar {
       display: none; align-items: center; gap: 8px; padding: 7px 12px; margin-bottom: 10px;
@@ -301,6 +302,15 @@
     .sel-bar.visible { display: flex; }
     .sel-bar-count { font-size: 11px; font-family: 'Geist Mono', monospace; color: var(--text2); flex: 1; }
     .sel-bar-count strong { color: var(--accent); }
+    .group-header-row > td {
+      padding: 5px 8px 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; font-family: 'Geist Mono', monospace;
+      color: var(--text2); border-bottom: none !important;
+    }
+    .group-header-row .gh-label { display: flex; align-items: center; gap: 6px; }
+    .group-header-row .gh-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .group-header-row .gh-count { font-weight: 400; color: var(--dim); }
+    .group-divider-row > td { padding: 0 !important; height: 12px; border-bottom: none !important; }
 
     /* ── Tag legend ── */
     .tag-legend {
@@ -1976,29 +1986,16 @@ function renderList() {
     return;
   }
 
-  const sorted = [...scenes].sort((a, b) => {
-    const { col, dir } = state.sort;
-    if (col === 'reel') {
-      const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
-      const diff = ri(a.reel) - ri(b.reel);
-      if (diff !== 0) return diff * dir;
-      return (a.number || a.name || '').localeCompare(b.number || b.name || '', undefined, { numeric: true });
-    }
-    if (col === 'status') return (state.statuses.findIndex(s => s.key === a.status) - state.statuses.findIndex(s => s.key === b.status)) * dir;
-    if (col === 'number') return (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }) * dir;
-    return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
-  });
-
   const cbAllEl = document.getElementById('cb-all');
   if (cbAllEl) cbAllEl.checked = false;
 
-  tbody.innerHTML = sorted.map(sc => {
+  // Inner scene row renderer
+  function sceneRow(sc) {
     const tagHtml = (sc.tags || []).map(tagChip).filter(Boolean).join('');
     const num = padSceneNum(sc.number) || '—';
     const gc  = sc.group_id ? (sc.group_color || groupColorFor(sc.group_id)) : null;
-    const groupStyle = gc ? `border-left: 3px solid ${gc};` : '';
     const isSel = _selectedScenes.has(sc.id);
-    return `<tr style="${groupStyle}" class="${isSel ? 'list-row-selected' : ''}">
+    return `<tr style="${gc ? `border-left: 3px solid ${gc};` : ''}" class="${isSel ? 'list-row-selected' : ''}">
       <td class="list-cb-td" onclick="event.stopPropagation()">
         <input type="checkbox" class="list-cb" ${isSel ? 'checked' : ''} onchange="toggleSelectScene('${sc.id}',this.checked)">
       </td>
@@ -2014,8 +2011,62 @@ function renderList() {
         </button>
       </div></td>
     </tr>`;
-  }).join('');
+  }
 
+  // Sort helper
+  function sortScenes(arr) {
+    return [...arr].sort((a, b) => {
+      const { col, dir } = state.sort;
+      if (col === 'reel') {
+        const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
+        const diff = ri(a.reel) - ri(b.reel);
+        if (diff !== 0) return diff * dir;
+        return (a.number || a.name || '').localeCompare(b.number || b.name || '', undefined, { numeric: true });
+      }
+      if (col === 'status') return (state.statuses.findIndex(s => s.key === a.status) - state.statuses.findIndex(s => s.key === b.status)) * dir;
+      if (col === 'number') return (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }) * dir;
+      return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
+    });
+  }
+
+  // Separate grouped vs ungrouped
+  const groupMap = new Map();
+  const ungrouped = [];
+  scenes.forEach(sc => {
+    if (sc.group_id) {
+      if (!groupMap.has(sc.group_id)) groupMap.set(sc.group_id, []);
+      groupMap.get(sc.group_id).push(sc);
+    } else {
+      ungrouped.push(sc);
+    }
+  });
+
+  let html = '';
+
+  // Render each named group with header + divider
+  [...groupMap.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([groupId, groupScenes]) => {
+    const gc = groupScenes[0].group_color || groupColorFor(groupId);
+    const sorted = sortScenes(groupScenes);
+    // Header row
+    html += `<tr class="group-header-row" style="border-left: 3px solid ${gc};">
+      <td class="list-cb-td"></td>
+      <td colspan="7"><div class="gh-label">
+        <span class="gh-swatch" style="background:${gc}"></span>
+        ${esc(groupId)}
+        <span class="gh-count">&nbsp;·&nbsp;${sorted.length}</span>
+      </div></td>
+    </tr>`;
+    sorted.forEach(sc => { html += sceneRow(sc); });
+    // Divider row
+    html += `<tr class="group-divider-row"><td colspan="8"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
+  });
+
+  // Render ungrouped scenes
+  if (ungrouped.length > 0) {
+    sortScenes(ungrouped).forEach(sc => { html += sceneRow(sc); });
+  }
+
+  tbody.innerHTML = html;
   if (tfoot) tfoot.innerHTML = renderListQARow();
   renderSortHeaders();
 }
@@ -2095,36 +2146,40 @@ function renderSelBar() {
   bar.classList.toggle('visible', n > 0);
 }
 
+let _groupOverlay = null;
+
 function groupSelectedScenes() {
   if (_selectedScenes.size === 0) return;
-  // Auto-generate next group name
   const existing = new Set(state.scenes.map(s => s.group_id).filter(Boolean));
   let n = 1;
   while (existing.has(`Group ${n}`)) n++;
   const defaultName = `Group ${n}`;
 
-  // Inline prompt via a tiny floating modal
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;min-width:280px;max-width:340px;display:flex;flex-direction:column;gap:12px;">
+  _groupOverlay = document.createElement('div');
+  _groupOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  _groupOverlay.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;min-width:280px;max-width:340px;display:flex;flex-direction:column;gap:12px;">
     <div style="font-size:13px;font-weight:600;color:var(--text);">Name this group</div>
     <input id="group-name-inp" value="${esc(defaultName)}"
       style="padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:'Geist',system-ui,sans-serif;outline:none;width:100%;box-sizing:border-box;"
-      placeholder="${esc(defaultName)}" autofocus>
-    <div style="font-size:10px;color:var(--dim);font-family:'Geist Mono',monospace;">Leave blank for no group name</div>
+      placeholder="${esc(defaultName)}">
+    <div style="font-size:10px;color:var(--dim);font-family:'Geist Mono',monospace;">Leave blank for auto-name (${esc(defaultName)})</div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn btn-ghost btn-sm" onclick="this.closest('[style]').remove()">Cancel</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeGroupOverlay()">Cancel</button>
       <button class="btn btn-primary btn-sm" onclick="applyGroupFromModal()">Apply</button>
     </div>
   </div>`;
-  document.body.appendChild(overlay);
-  const inp = overlay.querySelector('#group-name-inp');
+  document.body.appendChild(_groupOverlay);
+  const inp = _groupOverlay.querySelector('#group-name-inp');
   if (inp) { inp.focus(); inp.select(); }
   inp.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); applyGroupFromModal(); }
-    if (e.key === 'Escape') overlay.remove();
+    if (e.key === 'Escape') closeGroupOverlay();
   });
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  _groupOverlay.addEventListener('click', e => { if (e.target === _groupOverlay) closeGroupOverlay(); });
+}
+
+function closeGroupOverlay() {
+  if (_groupOverlay) { _groupOverlay.remove(); _groupOverlay = null; }
 }
 
 function applyGroupFromModal() {
@@ -2142,7 +2197,7 @@ function applyGroupFromModal() {
     sc.group_color = groupColor;
     upsertScene(sc);
   });
-  document.querySelector('[style*="position:fixed"][style*="z-index:2000"]')?.remove();
+  closeGroupOverlay();
   clearSelection();
   render();
 }
