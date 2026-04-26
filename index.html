@@ -343,7 +343,7 @@
 
     /* ── Tag chips / dots ── */
     .tag-chip { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 9px; font-family: 'Geist Mono', monospace; font-weight: 500; letter-spacing: 0.06em; white-space: nowrap; border: 1px solid transparent; }
-    .tag-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; cursor: default; }
+    .tag-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; cursor: default; }
 
     /* ── AT-A-GLANCE ── */
     .glance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -358,16 +358,17 @@
 
     /* Scene card */
     .scene-card {
-      padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
+      padding: 5px 8px; border-radius: 5px; border: 1px solid var(--border);
       background: var(--bg); cursor: pointer; transition: all 0.12s;
     }
     .scene-card:hover { border-color: var(--border2); background: var(--surface2); }
-    .scene-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
-    .scene-card-main { display: flex; flex-direction: row; align-items: baseline; gap: 5px; flex: 1; min-width: 0; overflow: hidden; }
-    .scene-card-name-hero { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
-    .scene-card-number { font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; line-height: 1.2; white-space: nowrap; flex-shrink: 0; }
-    .scene-card-number.hero { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.06em; font-family: 'Geist Mono', monospace; }
-    .scene-card-footer { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 5px; min-height: 9px; }
+    .scene-card-top { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+    .scene-card-main { display: flex; flex-direction: row; align-items: baseline; gap: 4px; flex: 1; min-width: 0; overflow: hidden; }
+    .scene-card-name-hero { font-size: 11px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+    .scene-card-number { font-size: 8px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; line-height: 1.2; white-space: nowrap; flex-shrink: 0; }
+    .scene-card-number.hero { font-size: 11px; font-weight: 700; color: var(--text); letter-spacing: 0.06em; font-family: 'Geist Mono', monospace; }
+    .scene-card-dots { display: flex; gap: 3px; align-items: center; flex-shrink: 0; margin-left: 2px; }
+    .scene-card-footer { display: none; }
 
     /* Quick-add (glance) */
     .reel-quick-add { padding: 6px 7px 7px; border-top: 1px solid var(--border); display: flex; gap: 4px; }
@@ -1934,9 +1935,9 @@ function renderGlance() {
                 : `<span class="scene-card-number hero">${esc(num)}</span>`
               }
             </div>
+            ${dotHtml ? `<span class="scene-card-dots">${dotHtml}</span>` : ''}
             ${badge(sc.status, true, sc.id)}
           </div>
-          ${dotHtml ? `<div class="scene-card-footer">${dotHtml}</div>` : ''}
         </div>`;
       };
 
