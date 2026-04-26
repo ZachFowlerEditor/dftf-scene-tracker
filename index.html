@@ -300,6 +300,8 @@
     .stat-chip:hover { border-color: var(--border2); }
     .stat-chip.chip-active { font-weight: 700; }
     .stat-hint { font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; margin-left: 4px; opacity: 0.7; }
+    .stat-clear-btn { font-size: 9px; color: var(--accent); font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; background: none; border: none; cursor: pointer; padding: 0; margin-left: 2px; opacity: 0.85; transition: opacity 0.1s; }
+    .stat-clear-btn:hover { opacity: 1; }
     .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .stat-mini-bar { width: 24px; height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
     .stat-mini-fill { height: 100%; border-radius: 2px; }
@@ -646,10 +648,7 @@
       <div class="page-title">Scene Tracker</div>
       <div class="page-title-meta">
         <span class="page-project-name" id="project-display-name"></span>
-        <div class="conn-badge connecting" id="conn-badge">
-          <span class="conn-dot"></span>
-          <span id="conn-label">Connecting</span>
-        </div>
+
       </div>
     </div>
     <div class="header-actions">
@@ -686,7 +685,7 @@
       <button class="btn btn-ghost btn-sm" onclick="openTagModal()">Tags</button>
       <button class="btn btn-ghost btn-sm" onclick="openStatusMgrModal()">Statuses</button>
       <button class="btn btn-ghost btn-icon btn-sm" onclick="showProjectSettings()" title="Project settings">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M6.5 1.5h3l.5 1.8a5 5 0 011.2.7l1.8-.6 1.5 2.6-1.4 1.2a5 5 0 010 1.6l1.4 1.2-1.5 2.6-1.8-.6a5 5 0 01-1.2.7l-.5 1.8h-3l-.5-1.8a5 5 0 01-1.2-.7l-1.8.6-1.5-2.6 1.4-1.2a5 5 0 010-1.6L1.5 5.5l1.5-2.6 1.8.6a5 5 0 011.2-.7l.5-1.8z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
       </button>
       <button class="btn btn-ghost btn-icon btn-sm" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode">
         <svg id="theme-icon-moon" width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13.5 10.5A6 6 0 016.5 2.5a6 6 0 100 11 6 6 0 007-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1026,7 +1025,7 @@ let state = {
 let _currentProjectId   = null;
 let _currentProject     = null;
 let _activities         = [];
-let _filter             = 'all';
+let _filters            = new Set();  // empty = show all
 let _search             = '';
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
@@ -1386,7 +1385,7 @@ async function enterProject(project) {
   const prefs = getPrefs();
   state.view = prefs.view || 'glance';
   state.sort = prefs.sort || { col: 'reel', dir: 1 };
-  _filter    = prefs.filter || 'all';
+  _filters   = new Set(Array.isArray(prefs.filters) ? prefs.filters : []);
 
   // Load scenes
   document.getElementById('loading-text').textContent = 'Loading scenes…';
@@ -1521,15 +1520,27 @@ function clearSearch() {
 // ── Filter ────────────────────────────────────────────────────────────────────
 
 function setFilter(key) {
-  _filter = (_filter === key && key !== 'all') ? 'all' : key;  // toggle off
-  savePrefs({ filter: _filter });
+  if (key === 'all') {
+    _filters.clear();
+  } else {
+    if (_filters.has(key)) _filters.delete(key);
+    else _filters.add(key);
+  }
+  savePrefs({ filters: [..._filters] });
+  renderStats();
+  render();
+}
+
+function clearFilters() {
+  _filters.clear();
+  savePrefs({ filters: [] });
   renderStats();
   render();
 }
 
 function filteredScenes() {
   let scenes = state.scenes;
-  if (_filter && _filter !== 'all') scenes = scenes.filter(s => s.status === _filter);
+  if (_filters.size > 0) scenes = scenes.filter(s => _filters.has(s.status));
   if (_search) {
     const q = _search.toLowerCase();
     scenes = scenes.filter(s => {
@@ -1978,7 +1989,7 @@ function renderStats() {
     </div>`;
   }
 
-  const allActive = !_filter || _filter === 'all';
+  const allActive = _filters.size === 0;
   let html = `<div class="stat-chip${allActive ? ' chip-active' : ''}" onclick="setFilter('all')"
     style="${allActive ? 'border-color:var(--border2);' : ''}">
     <span style="font-weight:600">${total}</span>&nbsp;<span style="color:var(--text2)">total</span>
@@ -1987,7 +1998,7 @@ function renderStats() {
     const cnt = counts[s.key] || 0;
     if (cnt > 0) {
       const pct      = total > 0 ? Math.round((cnt / total) * 100) : 0;
-      const isActive = _filter === s.key;
+      const isActive = _filters.has(s.key);
       html += `<div class="stat-chip${isActive ? ' chip-active' : ''}"
         onclick="setFilter('${s.key}')"
         style="${isActive ? `border-color:${s.color}55;background:${s.bg};color:${s.color};` : ''}">
@@ -2000,6 +2011,7 @@ function renderStats() {
     }
   });
   html += `<span class="stat-hint">click to filter</span>`;
+  if (_filters.size > 0) html += `<button class="stat-clear-btn" onclick="clearFilters()">clear all</button>`;
   document.getElementById('stats-bar').innerHTML = html;
   renderTagLegend();
 }
