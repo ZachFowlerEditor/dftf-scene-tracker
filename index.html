@@ -1940,32 +1940,26 @@ function renderGlance() {
         </div>`;
       };
 
-      // Separate grouped vs ungrouped within this reel
-      const reelGroupMap = new Map();
-      const reelUngrouped = [];
-      reelScenes.forEach(sc => {
-        if (sc.group_id) {
-          if (!reelGroupMap.has(sc.group_id)) reelGroupMap.set(sc.group_id, []);
-          reelGroupMap.get(sc.group_id).push(sc);
-        } else {
-          reelUngrouped.push(sc);
-        }
-      });
-
       const sortByNum = arr => [...arr].sort((a,b) => (a.number||'').localeCompare(b.number||'', undefined, {numeric:true}));
 
-      // Render groups
-      [...reelGroupMap.entries()].sort(([a],[b]) => a.localeCompare(b)).forEach(([groupId, gScenes]) => {
-        const gc = gScenes[0].group_color || groupColorFor(groupId);
-        html += `<div class="reel-group-hdr" onclick="editGroup('${esc(groupId)}')">
-          <span class="reel-group-sw" style="background:${gc}"></span>${esc(groupId)}
-        </div>`;
-        sortByNum(gScenes).forEach(sc => { html += scCard(sc); });
-        html += `<hr class="reel-group-div">`;
+      // Sort all reel scenes by number, then walk in order emitting headers/dividers
+      const reelSorted = sortByNum(reelScenes);
+      let prevGrp = null;
+      reelSorted.forEach(sc => {
+        const cur = sc.group_id || null;
+        const gc  = cur ? (sc.group_color || groupColorFor(cur)) : null;
+        if (prevGrp && cur !== prevGrp) {
+          html += `<hr class="reel-group-div">`;
+        }
+        if (cur && cur !== prevGrp) {
+          html += `<div class="reel-group-hdr" onclick="editGroup('${esc(cur)}')">
+            <span class="reel-group-sw" style="background:${gc}"></span>${esc(cur)}
+          </div>`;
+        }
+        html += scCard(sc);
+        prevGrp = cur;
       });
-
-      // Render ungrouped
-      sortByNum(reelUngrouped).forEach(sc => { html += scCard(sc); });
+      if (prevGrp) html += `<hr class="reel-group-div">`;
     }
 
     html += `</div>
@@ -2055,58 +2049,46 @@ function renderList() {
     </tr>`;
   }
 
-  // Sort helper
-  function sortScenes(arr) {
-    return [...arr].sort((a, b) => {
-      const { col, dir } = state.sort;
-      if (col === 'reel') {
-        const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
-        const diff = ri(a.reel) - ri(b.reel);
-        if (diff !== 0) return diff * dir;
-        return (a.number || a.name || '').localeCompare(b.number || b.name || '', undefined, { numeric: true });
-      }
-      if (col === 'status') return (state.statuses.findIndex(s => s.key === a.status) - state.statuses.findIndex(s => s.key === b.status)) * dir;
-      if (col === 'number') return (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }) * dir;
-      return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
-    });
-  }
-
-  // Separate grouped vs ungrouped
-  const groupMap = new Map();
-  const ungrouped = [];
-  scenes.forEach(sc => {
-    if (sc.group_id) {
-      if (!groupMap.has(sc.group_id)) groupMap.set(sc.group_id, []);
-      groupMap.get(sc.group_id).push(sc);
-    } else {
-      ungrouped.push(sc);
+  // Sort all scenes together preserving master order
+  const sorted = [...scenes].sort((a, b) => {
+    const { col, dir } = state.sort;
+    if (col === 'reel') {
+      const ri = v => { const i = state.reels.indexOf(v); return i === -1 ? 9999 : i; };
+      const diff = ri(a.reel) - ri(b.reel);
+      if (diff !== 0) return diff * dir;
+      return (a.number || a.name || '').localeCompare(b.number || b.name || '', undefined, { numeric: true });
     }
+    if (col === 'status') return (state.statuses.findIndex(s => s.key === a.status) - state.statuses.findIndex(s => s.key === b.status)) * dir;
+    if (col === 'number') return (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }) * dir;
+    return (a.name||'').localeCompare(b.name||'', undefined, { numeric: true }) * dir;
   });
 
+  // Walk in sort order — emit header when group starts/resumes, divider when group run ends
   let html = '';
-
-  // Render each named group with header + divider
-  [...groupMap.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([groupId, groupScenes]) => {
-    const gc = groupScenes[0].group_color || groupColorFor(groupId);
-    const sorted = sortScenes(groupScenes);
-    // Header row
-    html += `<tr class="group-header-row" style="border-left: 3px solid ${gc};" onclick="editGroup('${esc(groupId)}')">
-      <td class="list-cb-td"></td>
-      <td colspan="7"><div class="gh-label">
-        <span class="gh-swatch" style="background:${gc}"></span>
-        ${esc(groupId)}
-        <span class="gh-count">&nbsp;·&nbsp;${sorted.length}</span>
-        <span class="gh-edit">edit</span>
-      </div></td>
-    </tr>`;
-    sorted.forEach(sc => { html += sceneRow(sc); });
-    // Divider row
-    html += `<tr class="group-divider-row"><td colspan="8"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
+  let prevGroup = null;
+  sorted.forEach(sc => {
+    const cur = sc.group_id || null;
+    const gc  = cur ? (sc.group_color || groupColorFor(cur)) : null;
+    if (prevGroup && cur !== prevGroup) {
+      html += `<tr class="group-divider-row"><td colspan="8"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
+    }
+    if (cur && cur !== prevGroup) {
+      const totalInGroup = sorted.filter(s => s.group_id === cur).length;
+      html += `<tr class="group-header-row" style="border-left: 3px solid ${gc};" onclick="editGroup('${esc(cur)}')">
+        <td class="list-cb-td"></td>
+        <td colspan="7"><div class="gh-label">
+          <span class="gh-swatch" style="background:${gc}"></span>
+          ${esc(cur)}
+          <span class="gh-count">&nbsp;·&nbsp;${totalInGroup}</span>
+          <span class="gh-edit">edit</span>
+        </div></td>
+      </tr>`;
+    }
+    html += sceneRow(sc);
+    prevGroup = cur;
   });
-
-  // Render ungrouped scenes
-  if (ungrouped.length > 0) {
-    sortScenes(ungrouped).forEach(sc => { html += sceneRow(sc); });
+  if (prevGroup) {
+    html += `<tr class="group-divider-row"><td colspan="8"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
   }
 
   tbody.innerHTML = html;
