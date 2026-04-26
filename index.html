@@ -22,6 +22,21 @@
       --dim:      #555;
       --accent:   #ffe066;
     }
+    [data-theme="light"] {
+      --bg:       #f4f4f6;
+      --surface:  #ffffff;
+      --surface2: #ebebed;
+      --surface3: #e2e2e5;
+      --border:   rgba(0,0,0,0.09);
+      --border2:  rgba(0,0,0,0.18);
+      --text:     #1a1a1c;
+      --text2:    #666;
+      --dim:      #aaa;
+      --accent:   #c9940a;
+    }
+    *, *::before, *::after { transition-property: background-color, border-color, color; transition-duration: 0.18s; transition-timing-function: ease; }
+    /* Exempt elements where transitions cause flicker or conflict */
+    .badge, .tag-chip, .reel-tag, input, button, .stat-chip { transition: none; }
 
     html, body {
       min-height: 100%; background: var(--bg); color: var(--text);
@@ -271,7 +286,7 @@
     .edit1-right { display: flex; align-items: baseline; gap: 10px; }
     .edit1-pct { font-size: 24px; font-weight: 700; font-family: 'Geist Mono', monospace; line-height: 1; }
     .edit1-count { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; }
-    .edit1-bar-wrap { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+    .edit1-bar-wrap { height: 5px; background: var(--border2); border-radius: 3px; overflow: hidden; }
     .edit1-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
 
     /* ── Stats bar ── */
@@ -286,13 +301,13 @@
     .stat-chip.chip-active { font-weight: 700; }
     .stat-hint { font-size: 9px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.08em; margin-left: 4px; opacity: 0.7; }
     .stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .stat-mini-bar { width: 24px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+    .stat-mini-bar { width: 24px; height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
     .stat-mini-fill { height: 100%; border-radius: 2px; }
 
     /* ── List view: checkboxes & selection bar ── */
     .list-cb-th { width: 28px; padding: 0 4px !important; text-align: center; }
     .list-cb-td { width: 28px; padding: 0 4px !important; text-align: center; vertical-align: middle; }
-    .list-cb { width: 13px; height: 13px; accent-color: rgba(255,255,255,0.35); cursor: pointer; opacity: 0.55; transition: opacity 0.1s; }
+    .list-cb { width: 13px; height: 13px; accent-color: var(--text2); cursor: pointer; opacity: 0.55; transition: opacity 0.1s; }
     .list-cb:hover, .list-cb:checked { opacity: 1; }
     .list-row-selected > td { background: rgba(255,224,102,0.05); }
     .sel-bar {
@@ -375,7 +390,7 @@
     .reel-quick-add { padding: 6px 7px 7px; border-top: 1px solid var(--border); display: flex; gap: 4px; }
     .reel-quick-input {
       padding: 5px 9px; background: transparent;
-      border: 1px dashed rgba(255,255,255,0.1); border-radius: 4px;
+      border: 1px dashed var(--border2); border-radius: 4px;
       color: var(--text); font-family: 'Geist', system-ui, sans-serif; font-size: 11px;
       outline: none; transition: all 0.15s; flex: 1; min-width: 0;
     }
@@ -649,6 +664,10 @@
       <button class="btn btn-ghost btn-sm" onclick="openStatusMgrModal()">Statuses</button>
       <button class="btn btn-ghost btn-icon btn-sm" onclick="showProjectSettings()" title="Project settings">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon btn-sm" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <svg id="theme-icon-moon" width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13.5 10.5A6 6 0 016.5 2.5a6 6 0 100 11 6 6 0 007-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg id="theme-icon-sun" width="13" height="13" viewBox="0 0 16 16" fill="none" style="display:none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       </button>
       <button class="btn btn-primary btn-sm" onclick="openSceneModal()">+ Add Scene</button>
     </div>
@@ -973,6 +992,27 @@ let _currentProjectId   = null;
 let _currentProject     = null;
 let _activities         = [];
 let _filter             = 'all';
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+
+function initTheme() {
+  const saved = localStorage.getItem('st_theme') || 'dark';
+  applyTheme(saved, false);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.dataset.theme || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark', true);
+}
+
+function applyTheme(theme, save) {
+  document.documentElement.dataset.theme = theme;
+  const moonEl = document.getElementById('theme-icon-moon');
+  const sunEl  = document.getElementById('theme-icon-sun');
+  if (moonEl) moonEl.style.display = theme === 'dark'  ? '' : 'none';
+  if (sunEl)  sunEl.style.display  = theme === 'light' ? '' : 'none';
+  if (save) localStorage.setItem('st_theme', theme);
+}
 let _selectedScenes     = new Set();
 let _activityOpen       = false;
 let _connState          = 'connecting';
@@ -2722,7 +2762,8 @@ document.addEventListener('keydown', e => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-initFromUrl();
+initTheme();
+  initFromUrl();
 
 </script>
 </body>
