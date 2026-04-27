@@ -367,14 +367,58 @@
     .reel-group-div { border: none; border-top: 1px solid var(--border); margin: 3px 0 5px; opacity: 0.6; }
 
     /* ── Tag legend ── */
-    .tag-legend {
-      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-      margin-bottom: 16px; padding: 7px 12px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    /* ── Tag filter bar (replaces tag legend) ── */
+    .tag-filter-bar {
+      display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; align-items: center;
     }
-    .tag-legend-label { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; flex-shrink: 0; }
-    .tag-legend-item { display: flex; align-items: center; gap: 5px; cursor: default; }
-    .tag-legend-name { font-size: 10px; color: var(--text2); font-family: 'Geist Mono', monospace; letter-spacing: 0.04em; }
+    .tag-chip-filter {
+      display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+      font-size: 10px; font-family: 'Geist Mono', monospace; letter-spacing: 0.04em;
+      white-space: nowrap; cursor: pointer; transition: border-color 0.12s, background 0.12s;
+      user-select: none;
+    }
+    .tag-chip-filter:hover { border-color: var(--border2); }
+    .tag-chip-filter.chip-active { font-weight: 700; }
+    .tag-chip-filter .tcf-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Calendar view ── */
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cal-week-label { font-size: 13px; font-weight: 700; font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; color: var(--text); }
+    .cal-nav-btn { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 5px; padding: 4px 10px; cursor: pointer; font-size: 12px; transition: all 0.12s; }
+    .cal-nav-btn:hover { border-color: var(--border2); color: var(--text); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; align-items: start; }
+    .cal-day { display: flex; flex-direction: column; gap: 5px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; min-height: 90px; }
+    .cal-day-today { border-color: var(--accent); }
+    .cal-day-hdr { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .cal-day-name { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; }
+    .cal-day-date { font-size: 12px; font-weight: 700; color: var(--text); font-family: 'Geist Mono', monospace; line-height: 1.2; }
+    .cal-day-date.today { color: var(--accent); }
+    .cal-scene { padding: 4px 8px; border-left: 3px solid transparent; cursor: pointer; transition: background 0.1s; margin: 2px 4px; border-radius: 4px; }
+    .cal-scene:hover { background: var(--surface3) !important; }
+    .cal-scene-num { font-size: 8px; font-family: 'Geist Mono', monospace; color: var(--dim); letter-spacing: 0.06em; }
+    .cal-scene-name { font-size: 10px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .cal-scene-dots { display: flex; gap: 3px; margin-top: 2px; }
+    .cal-empty { font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace; text-align: center; padding: 12px 4px; opacity: 0.5; }
+    .cal-no-dates { grid-column: 1/-1; text-align: center; padding: 32px; font-size: 12px; color: var(--dim); font-family: 'Geist Mono', monospace; letter-spacing: 0.06em; }
+
+    /* ── Scene dates in modal ── */
+    .dates-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+    .date-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 10px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; font-size: 10px; font-family: 'Geist Mono', monospace; color: var(--text2); }
+    .date-chip-rm { background: none; border: none; color: var(--dim); cursor: pointer; padding: 0; font-size: 13px; line-height: 1; transition: color 0.1s; }
+    .date-chip-rm:hover { color: var(--text); }
+    .date-add-row { display: flex; gap: 6px; align-items: center; }
+    .date-add-inp { padding: 5px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 11px; font-family: 'Geist Mono', monospace; outline: none; transition: border-color 0.12s; }
+    .date-add-inp:focus { border-color: var(--border2); }
+
+    /* ── PDF parse modal ── */
+    .parse-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .parse-table th { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); font-family: 'Geist Mono', monospace; padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    .parse-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); font-family: 'Geist Mono', monospace; color: var(--text2); }
+    .parse-table tr.matched td { color: var(--text); }
+    .parse-table tr.matched td:first-child { font-weight: 700; }
+    .parse-match-badge { font-size: 9px; padding: 1px 6px; border-radius: 10px; background: rgba(109,191,109,0.15); color: #6dbf6d; }
+    .parse-miss-badge  { font-size: 9px; padding: 1px 6px; border-radius: 10px; background: rgba(232,107,107,0.12); color: #e86b6b; }
 
     /* ── Badge ── */
     .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-family: 'Geist Mono', monospace; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0; }
@@ -661,6 +705,10 @@
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           List
         </button>
+        <button class="view-btn" id="btn-calendar" onclick="setView('calendar')">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 1v3M11 1v3M1.5 6.5h13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Calendar
+        </button>
       </div>
       <button class="btn btn-ghost btn-sm" id="btn-activity" onclick="toggleActivityPanel()" title="Activity log">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -674,6 +722,11 @@
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         Import
       </button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('pdf-schedule-input').click()" title="Parse a one-line shooting schedule PDF">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 2h6l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.4"/><path d="M9 2v4h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M6 9h4M6 11.5h2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Schedule
+      </button>
+      <input type="file" id="pdf-schedule-input" accept=".pdf" style="display:none" onchange="parseSchedulePDF(this.files[0]);this.value=''">
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 10V1M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         Export
@@ -724,10 +777,19 @@
   </div>
 
   <!-- Tag legend -->
-  <div class="tag-legend" id="tag-legend" style="display:none"></div>
+  <div class="tag-filter-bar" id="tag-filter-bar" style="display:none"></div>
 
   <div id="view-glance">
     <div class="glance-grid" id="glance-grid"></div>
+  </div>
+
+  <div id="view-calendar" style="display:none">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calStep(-1)">← Prev</button>
+      <span class="cal-week-label" id="cal-week-label">Week 1</span>
+      <button class="cal-nav-btn" onclick="calStep(1)">Next →</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
   </div>
 
   <div id="view-list" style="display:none">
@@ -742,6 +804,7 @@
             <th id="th-status" onclick="sortBy('status')">Status <span class="sort-arrow" id="sa-status"></span></th>
             <th>Tags</th>
             <th>Notes</th>
+            <th>Owed</th>
             <th></th>
           </tr>
         </thead>
@@ -753,6 +816,21 @@
 </div>
 
 <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="handleCSVFile(event)">
+
+<!-- ── Schedule Import Modal ── -->
+<div class="modal-overlay hidden" id="schedule-modal-overlay" onclick="handleOverlayClick(event,'schedule-modal-overlay')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title">Parse Shooting Schedule</div>
+      <button class="modal-close" onclick="closeScheduleModal()">×</button>
+    </div>
+    <div id="schedule-preview-body" style="padding:0 0 16px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeScheduleModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="applySchedule()">Apply Dates</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Scene Modal ── -->
 <div class="modal-overlay hidden" id="scene-modal-overlay" onclick="handleOverlayClick(event,'scene-modal-overlay')">
@@ -805,8 +883,20 @@
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">Shoot Dates</label>
+        <div class="dates-list" id="scene-dates-list"></div>
+        <div class="date-add-row">
+          <input type="date" class="date-add-inp" id="scene-date-inp">
+          <button class="btn btn-ghost btn-sm" onclick="addSceneDate()">+ Add Date</button>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Notes</label>
         <textarea class="form-textarea" id="scene-notes" placeholder="Any notes…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Owed</label>
+        <textarea class="form-textarea" id="scene-owed" placeholder="Outstanding items…" style="min-height:56px"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -1026,7 +1116,9 @@ let _currentProjectId   = null;
 let _currentProject     = null;
 let _activities         = [];
 let _filters            = new Set();  // empty = show all
+let _tagFilters         = new Set();  // tag id filters
 let _search             = '';
+let _calWeekOffset      = 0;          // weeks from project anchor week
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
 
@@ -1084,6 +1176,8 @@ function dbRowToScene(row) {
     reel:        row.reel        || '',
     status:      row.status      || 'not-received',
     notes:       row.notes       || '',
+    owed:        row.owed        || '',
+    dates:       Array.isArray(row.dates) ? row.dates : [],
     tags:        row.tags        || [],
     group_id:    row.group_id    || '',
     group_color: row.group_color || '',
@@ -1101,6 +1195,8 @@ async function upsertScene(scene) {
     reel:        scene.reel        || '',
     status:      scene.status      || 'not-received',
     notes:       scene.notes       || '',
+    owed:        scene.owed        || '',
+    dates:       scene.dates       || [],
     tags:        scene.tags        || [],
     group_id:    scene.group_id    || null,
     group_color: scene.group_color || null,
@@ -1541,6 +1637,7 @@ function clearFilters() {
 function filteredScenes() {
   let scenes = state.scenes;
   if (_filters.size > 0) scenes = scenes.filter(s => _filters.has(s.status));
+  if (_tagFilters.size > 0) scenes = scenes.filter(s => [..._tagFilters].every(tid => (s.tags||[]).includes(tid)));
   if (_search) {
     const q = _search.toLowerCase();
     scenes = scenes.filter(s => {
@@ -2016,13 +2113,47 @@ function renderStats() {
   renderTagLegend();
 }
 
-function renderTagLegend() {
-  const el = document.getElementById('tag-legend');
+function renderTagLegend() { renderTagBar(); }  // compat alias
+
+function renderTagBar() {
+  const el = document.getElementById('tag-filter-bar');
   if (!el) return;
   if (state.tags.length === 0) { el.style.display = 'none'; return; }
   el.style.display = '';
-  el.innerHTML = '<span class="tag-legend-label">Tags</span>' +
-    state.tags.map(t => `<span class="tag-legend-item"><span class="tag-dot" style="background:${t.color}"></span><span class="tag-legend-name">${esc(t.label)}</span></span>`).join('');
+  const total = state.scenes.length;
+  const tagCounts = {};
+  state.scenes.forEach(sc => (sc.tags||[]).forEach(tid => { tagCounts[tid] = (tagCounts[tid]||0)+1; }));
+  let html = '';
+  state.tags.forEach(t => {
+    const cnt = tagCounts[t.id] || 0;
+    if (cnt === 0) return;
+    const pct = total > 0 ? Math.round((cnt/total)*100) : 0;
+    const isActive = _tagFilters.has(t.id);
+    html += `<div class="tag-chip-filter${isActive ? ' chip-active' : ''}"
+      onclick="setTagFilter('${t.id}')"
+      style="${isActive ? `border-color:${t.color}55;background:${t.color}18;color:${t.color};` : ''}">
+      <span class="tcf-dot" style="background:${t.color}"></span>
+      <span style="font-weight:600">${cnt}</span>&nbsp;
+      <span style="color:${isActive?'inherit':'var(--text2)'};">${esc(t.label)}</span>
+      <span class="stat-mini-bar"><span class="stat-mini-fill" style="width:${pct}%;background:${t.color}"></span></span>
+      <span style="color:${isActive?'inherit':'var(--dim)'};">${pct}%</span>
+    </div>`;
+  });
+  if (_tagFilters.size > 0) html += `<button class="stat-clear-btn" onclick="clearTagFilters()">clear tags</button>`;
+  el.innerHTML = html;
+}
+
+function setTagFilter(tagId) {
+  if (_tagFilters.has(tagId)) _tagFilters.delete(tagId);
+  else _tagFilters.add(tagId);
+  renderTagBar();
+  render();
+}
+
+function clearTagFilters() {
+  _tagFilters.clear();
+  renderTagBar();
+  render();
 }
 
 function renderGlance() {
@@ -2147,7 +2278,7 @@ function renderList() {
   const scenes = filteredScenes();
 
   if (scenes.length === 0) {
-    tbody.innerHTML = `<tr class="no-data-row"><td colspan="8">${state.scenes.length > 0 ? 'No scenes match the current filter' : 'No scenes yet — click + Add Scene to begin'}</td></tr>`;
+    tbody.innerHTML = `<tr class="no-data-row"><td colspan="9">${state.scenes.length > 0 ? 'No scenes match the current filter' : 'No scenes yet — click + Add Scene to begin'}</td></tr>`;
     renderSortHeaders();
     if (tfoot) tfoot.innerHTML = renderListQARow();
     return;
@@ -2172,6 +2303,7 @@ function renderList() {
       <td>${badge(sc.status, true, sc.id)}</td>
       <td class="tags-cell cell-editable" onclick="openInlineTagPicker(event,this,'${sc.id}')"><div class="tags-wrap">${tagHtml || '<span style="color:var(--dim)">—</span>'}</div></td>
       <td class="notes-cell cell-editable" title="${esc(sc.notes)}" onclick="startInlineEditNotes(event,'${sc.id}')">${sc.notes ? esc(sc.notes) : '<span style="color:var(--dim)">—</span>'}</td>
+      <td class="notes-cell" title="${esc(sc.owed||'')}">${sc.owed ? esc(sc.owed) : '<span style="color:var(--dim)">—</span>'}</td>
       <td><div class="row-actions">
         <button class="btn btn-ghost btn-icon btn-sm" onclick="openSceneModal('${sc.id}')" title="Edit">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5L13.5 4.5L5.5 12.5L2.5 13.5L3.5 10.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -2201,13 +2333,13 @@ function renderList() {
     const cur = sc.group_id || null;
     const gc  = cur ? (sc.group_color || groupColorFor(cur)) : null;
     if (prevGroup && cur !== prevGroup) {
-      html += `<tr class="group-divider-row"><td colspan="8"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
+      html += `<tr class="group-divider-row"><td colspan="9"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
     }
     if (cur && cur !== prevGroup) {
       const totalInGroup = sorted.filter(s => s.group_id === cur).length;
       html += `<tr class="group-header-row" style="border-left: 3px solid ${gc};" onclick="editGroup('${esc(cur)}')">
         <td class="list-cb-td"></td>
-        <td colspan="7"><div class="gh-label">
+        <td colspan="8"><div class="gh-label">
           <span class="gh-swatch" style="background:${gc}"></span>
           ${esc(cur)}
           <span class="gh-count">&nbsp;·&nbsp;${totalInGroup}</span>
@@ -2219,7 +2351,7 @@ function renderList() {
     prevGroup = cur;
   });
   if (prevGroup) {
-    html += `<tr class="group-divider-row"><td colspan="8"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
+    html += `<tr class="group-divider-row"><td colspan="9"><hr style="border:none;border-top:1px solid var(--border);margin:0;"></td></tr>`;
   }
 
   tbody.innerHTML = html;
@@ -2241,12 +2373,15 @@ function renderSortHeaders() {
 
 function setView(v, save = true) {
   state.view = v;
-  document.getElementById('view-glance').style.display = v === 'glance' ? '' : 'none';
-  document.getElementById('view-list').style.display   = v === 'list'   ? '' : 'none';
-  document.getElementById('btn-glance').classList.toggle('active', v === 'glance');
-  document.getElementById('btn-list').classList.toggle('active',   v === 'list');
+  document.getElementById('view-glance').style.display    = v === 'glance'   ? '' : 'none';
+  document.getElementById('view-list').style.display      = v === 'list'     ? '' : 'none';
+  document.getElementById('view-calendar').style.display  = v === 'calendar' ? '' : 'none';
+  document.getElementById('btn-glance').classList.toggle('active',   v === 'glance');
+  document.getElementById('btn-list').classList.toggle('active',     v === 'list');
+  document.getElementById('btn-calendar').classList.toggle('active', v === 'calendar');
   if (v !== 'list') { _selectedScenes.clear(); renderSelBar(); }
   if (save) savePrefs({ view: v });
+  if (v === 'calendar') { renderCalendar(); return; }
   render();
 }
 
@@ -2466,6 +2601,8 @@ function openSceneModal(id) {
     document.getElementById('scene-reel').value      = sc.reel || '';
     document.getElementById('scene-status').value    = sc.status;
     document.getElementById('scene-notes').value     = sc.notes || '';
+    document.getElementById('scene-owed').value      = sc.owed  || '';
+    _modalDates = [...(sc.dates || [])]; renderDatesChips();
     document.getElementById('scene-group').value     = sc.group_id || '';
     document.getElementById('reel-cd-label').textContent = sc.reel || '—';
     const st = statusFor(sc.status);
@@ -2482,6 +2619,8 @@ function openSceneModal(id) {
     document.getElementById('scene-reel').value      = state.reels[0] || '';
     document.getElementById('scene-status').value    = 'not-received';
     document.getElementById('scene-notes').value     = '';
+    document.getElementById('scene-owed').value      = '';
+    _modalDates = []; renderDatesChips();
     document.getElementById('scene-group').value     = '';
     document.getElementById('reel-cd-label').textContent = state.reels[0] || '—';
     const st = statusFor('not-received');
@@ -2543,6 +2682,8 @@ function saveScene() {
     reel:        document.getElementById('scene-reel').value,
     status:      document.getElementById('scene-status').value,
     notes:       document.getElementById('scene-notes').value.trim(),
+    owed:        document.getElementById('scene-owed').value.trim(),
+    dates:       [..._modalDates],
     tags:        getModalSelectedTags(),
     group_id:    groupName,
     group_color: groupName ? groupColorFor(groupName) : '',
@@ -2835,13 +2976,256 @@ function closeImportModal() {
   _pendingImport = null;
 }
 
+
+// ── Modal date management ─────────────────────────────────────────────────────
+
+let _modalDates = [];
+
+function renderDatesChips() {
+  const el = document.getElementById('scene-dates-list');
+  if (!el) return;
+  if (_modalDates.length === 0) { el.innerHTML = '<span style="color:var(--dim);font-size:12px">No dates added yet</span>'; return; }
+  el.innerHTML = _modalDates.map((d, i) => {
+    const fmt = new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    return `<span class="date-chip">${esc(fmt)}<button onclick="_modalDates.splice(${i},1);renderDatesChips()" style="background:none;border:none;color:var(--dim);cursor:pointer;padding:0;font-size:13px;line-height:1" title="Remove">×</button></span>`;
+  }).join('');
+}
+
+function addSceneDate() {
+  const inp = document.getElementById('scene-date-inp');
+  if (!inp || !inp.value) { inp?.focus(); return; }
+  if (!_modalDates.includes(inp.value)) { _modalDates.push(inp.value); _modalDates.sort(); }
+  inp.value = '';
+  renderDatesChips();
+}
+
+// ── Calendar view ─────────────────────────────────────────────────────────────
+
+function renderCalendar() {
+  const grid  = document.getElementById('cal-grid');
+  const label = document.getElementById('cal-week-label');
+  if (!grid) return;
+
+  // Gather all dates across all scenes
+  const allDates = [];
+  state.scenes.forEach(sc => (sc.dates || []).forEach(d => allDates.push(d)));
+  allDates.sort();
+
+  // Anchor = Monday of earliest date week (week 1), or this Monday if no dates
+  let anchorDate;
+  if (allDates.length > 0) {
+    const first = new Date(allDates[0] + 'T00:00:00');
+    const dow   = first.getDay();
+    anchorDate  = new Date(first);
+    anchorDate.setDate(anchorDate.getDate() + (dow === 0 ? -6 : 1 - dow));
+  } else {
+    const today = new Date();
+    const dow   = today.getDay();
+    anchorDate  = new Date(today);
+    anchorDate.setDate(anchorDate.getDate() + (dow === 0 ? -6 : 1 - dow));
+  }
+
+  // Apply week offset
+  const weekStart = new Date(anchorDate);
+  weekStart.setDate(weekStart.getDate() + _calWeekOffset * 7);
+  label.textContent = `Week ${_calWeekOffset + 1}`;
+
+  // Build 7-day slots Mon–Sun
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(d.getDate() + i); days.push(d);
+  }
+
+  // Map scenes to their dates
+  const dayMap = {};
+  state.scenes.forEach(sc => (sc.dates || []).forEach(d => {
+    if (!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push(sc);
+  }));
+
+  const todayISO   = new Date().toISOString().slice(0, 10);
+  const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  grid.innerHTML = days.map((d, i) => {
+    const iso    = d.toISOString().slice(0, 10);
+    const dom    = d.getDate();
+    const isToday = iso === todayISO;
+    const scenes = (dayMap[iso] || []).sort((a, b) =>
+      (a.number||'').localeCompare(b.number||'', undefined, { numeric: true }));
+
+    const sceneHtml = scenes.length === 0
+      ? `<span class="cal-empty">—</span>`
+      : scenes.map(sc => {
+          const firstTag = (sc.tags||[])[0];
+          const t   = firstTag ? tagFor(firstTag) : null;
+          const col = t ? t.color : 'var(--dim)';
+          const num = padSceneNum(sc.number) || '';
+          const nm  = sc.name || '';
+          return `<div class="cal-scene" style="border-left-color:${col};background:${t ? col + '18' : 'transparent'}" onclick="openSceneModal('${sc.id}')">
+            <div class="cal-scene-num">${esc(num)}</div>
+            <div class="cal-scene-name">${esc(nm || '(untitled)')}</div>
+          </div>`;
+        }).join('');
+
+    return `<div class="cal-day${isToday ? ' cal-day-today' : ''}">
+      <div class="cal-day-hdr">
+        <span class="cal-day-name">${DAY_NAMES[i]}</span>
+        <span class="cal-day-date${isToday ? ' today' : ''}">${dom}</span>
+      </div>
+      ${sceneHtml}
+    </div>`;
+  }).join('');
+}
+
+function calStep(delta) {
+  _calWeekOffset += delta;
+  renderCalendar();
+}
+
+// ── PDF Schedule Parser ───────────────────────────────────────────────────────
+
+let _pendingSchedule = null;
+
+async function parseSchedulePDF(file) {
+  if (!file) return;
+  showToast('Parsing schedule…');
+
+  // Dynamically load PDF.js if not already loaded
+  if (!window.pdfjsLib) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const tc   = await page.getTextContent();
+      fullText += tc.items.map(i => i.str).join(' ') + '\n';
+    }
+    _pendingSchedule = parseScheduleText(fullText);
+    showSchedulePreview();
+  } catch (err) {
+    console.error(err);
+    showToast('Failed to parse PDF: ' + err.message, 'error');
+  }
+}
+
+function parseScheduleText(text) {
+  // Normalise whitespace runs
+  const lines = text.split(/\n/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  const results = []; // { date: 'YYYY-MM-DD', label: 'SHOOT DAY 1 — Mon 24th April', scenes: ['1A','2','3'] }
+  let currentDay = null;
+
+  // Month map
+  const MONTHS = { january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11 };
+
+  // Pattern: "SHOOT DAY 1 DAY 24th APRIL" or "SHOOT DAY 1 MONDAY 24TH APRIL 2025"
+  const dayHeaderRe = /SHOOT\s+DAY\s+(\d+).*?(\d{1,2})(?:ST|ND|RD|TH)?\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)(?:\s+(\d{4}))?/i;
+
+  // Scene line: starts with a scene number (digits, optional letter suffix)
+  // Format: "1A INT STUDIO   DAILIES ..."  — scene# is first token, then INT/EXT
+  const sceneLineRe = /^(\d+[A-Z]?)\s+(INT|EXT|I\/E|E\/I)/i;
+
+  for (const line of lines) {
+    const dayMatch = line.match(dayHeaderRe);
+    if (dayMatch) {
+      const dayNum  = parseInt(dayMatch[1]);
+      const dom     = parseInt(dayMatch[2]);
+      const monthStr= dayMatch[3].toLowerCase();
+      const year    = dayMatch[4] ? parseInt(dayMatch[4]) : new Date().getFullYear();
+      const month   = MONTHS[monthStr];
+      let dateStr = '';
+      if (month !== undefined) {
+        const d = new Date(year, month, dom);
+        dateStr = d.toISOString().slice(0, 10);
+      }
+      currentDay = { date: dateStr, label: `Shoot Day ${dayNum} — ${dom} ${dayMatch[3]} ${year}`, scenes: [] };
+      results.push(currentDay);
+      continue;
+    }
+
+    if (currentDay) {
+      const scMatch = line.match(sceneLineRe);
+      if (scMatch) {
+        const scNum = scMatch[1].toUpperCase();
+        if (!currentDay.scenes.includes(scNum)) currentDay.scenes.push(scNum);
+      }
+    }
+  }
+
+  return results.filter(d => d.scenes.length > 0);
+}
+
+function showSchedulePreview() {
+  if (!_pendingSchedule || _pendingSchedule.length === 0) {
+    showToast('No shoot days / scenes found in PDF', 'error'); return;
+  }
+
+  const totalScenes = [...new Set(_pendingSchedule.flatMap(d => d.scenes))].length;
+  const rows = _pendingSchedule.map(d =>
+    `<tr>
+      <td>${esc(d.date || '?')}</td>
+      <td>${esc(d.label)}</td>
+      <td>${d.scenes.map(s => `<span class="reel-tag" style="font-family:'Geist Mono',monospace">${esc(s)}</span>`).join(' ')}</td>
+    </tr>`
+  ).join('');
+
+  document.getElementById('schedule-preview-body').innerHTML =
+    `<p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+      Found <strong>${_pendingSchedule.length}</strong> shoot day(s) covering <strong>${totalScenes}</strong> scene number(s).
+      Matching scenes will have dates added automatically.
+    </p>
+    <div class="import-preview"><table class="parse-table">
+      <thead><tr><th>Date</th><th>Day</th><th>Scenes</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+
+  document.getElementById('schedule-modal-overlay').classList.remove('hidden');
+}
+
+function applySchedule() {
+  if (!_pendingSchedule) return;
+  let matched = 0;
+  _pendingSchedule.forEach(day => {
+    if (!day.date) return;
+    day.scenes.forEach(scNum => {
+      // Match by scene number (normalised)
+      const sc = state.scenes.find(s => padSceneNum(s.number) === padSceneNum(scNum) || s.number === scNum);
+      if (sc) {
+        if (!sc.dates) sc.dates = [];
+        if (!sc.dates.includes(day.date)) { sc.dates.push(day.date); sc.dates.sort(); matched++; }
+        upsertScene(sc);
+      }
+    });
+  });
+  closeScheduleModal();
+  if (matched > 0) { render(); showToast(`Applied dates to ${matched} scene(s)`); }
+  else showToast('No matching scenes found — check scene numbers', 'error');
+  _pendingSchedule = null;
+}
+
+function closeScheduleModal() {
+  document.getElementById('schedule-modal-overlay').classList.add('hidden');
+  _pendingSchedule = null;
+}
+
 // ── Keyboard ──────────────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     Picker_close();
     ['scene-modal-overlay','reel-modal-overlay','tag-modal-overlay',
-     'status-mgr-overlay','import-modal-overlay','project-settings-overlay']
+     'status-mgr-overlay','import-modal-overlay','project-settings-overlay','schedule-modal-overlay']
       .forEach(id => document.getElementById(id).classList.add('hidden'));
   }
   if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.tagName !== 'TEXTAREA') {
